@@ -1,0 +1,67 @@
+🚀 QUICK TEST COMMANDS
+======================
+
+Copy and paste these commands one by one:
+
+1. Navigate to project:
+   cd pixel_aup_events
+
+2. Clean build:
+   flutter clean
+
+3. Get dependencies:
+   flutter pub get
+
+4. Run app:
+   flutter run
+
+Expected console output:
+------------------------
+🔥 MAIN STARTED
+✅ WIDGETS BINDING INITIALIZED
+✅ RUN APP CALLED
+🎨 BUILDING APP
+🎨 BUILDING SPLASH SCREEN
+🚀 SPLASH SCREEN INIT
+⏳ STARTING INITIALIZATION
+✅ INITIALIZATION COMPLETE
+
+Expected screen:
+----------------
+- Blue background
+- White event icon (📅)
+- "Pixel Events" text
+- Loading spinner
+- "Loading..." text
+
+If it works: ✅ The freeze is fixed!
+If it freezes: ❌ Check DEBUGGING.md for next steps
+
+Alternative minimal test (if still frozen):
+-------------------------------------------
+Replace lib/main.dart with this:
+
+import 'package:flutter/material.dart';
+
+void main() {
+  print("🔥 MAIN STARTED");
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text("APP RUNNING ✅", style: TextStyle(fontSize: 24)),
+        ),
+      ),
+    );
+  }
+}
+
+Then run:
+flutter clean && flutter pub get && flutter run
