@@ -5,7 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/models.dart';
 import '../../providers/repository_providers.dart';
-import '../../services/api_client.dart';
+import '../../widgets/widgets.dart';
 
 class EventListScreen extends ConsumerStatefulWidget {
   const EventListScreen({super.key});
@@ -19,7 +19,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
   List<Event> _events = [];
   List<Event> _filteredEvents = [];
   String _searchQuery = '';
-  Set<String> _selectedTags = {};
+  final Set<String> _selectedTags = {};
   DateTimeRange? _dateRange;
 
   @override
@@ -35,19 +35,16 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
     });
 
     try {
-      print('🔄 LOADING EVENTS...');
       final repository = ref.read(eventRepositoryProvider);
       final events = await repository.getEvents();
       
-      print('✅ EVENTS LOADED: ${events.length} items found');
       if (mounted) {
         setState(() {
           _events = events;
-          _applyFilters(); // Apply current filters to new data
+          _applyFilters();
         });
       }
     } catch (e) {
-      print('❌ FAILED TO LOAD EVENTS: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -73,20 +70,17 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
   void _applyFilters() {
     setState(() {
       _filteredEvents = _events.where((event) {
-        // Search filter
         if (_searchQuery.isNotEmpty &&
             !event.title.toLowerCase().contains(_searchQuery.toLowerCase()) &&
             !event.description.toLowerCase().contains(_searchQuery.toLowerCase())) {
           return false;
         }
 
-        // Tag filter
         if (_selectedTags.isNotEmpty &&
             !event.tags.any((tag) => _selectedTags.contains(tag))) {
           return false;
         }
 
-        // Date range filter
         if (_dateRange != null) {
           if (event.date.isBefore(_dateRange!.start) ||
               event.date.isAfter(_dateRange!.end)) {
@@ -101,37 +95,43 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFF0B0B0F);
+    const pink = Color(0xFFFF2E88);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Events'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              _showFilterDialog();
-            },
-          ),
-        ],
-      ),
+      backgroundColor: bg,
       body: Column(
         children: [
           // Search Bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search events...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: CyberTextField(
+                    hintText: 'Search events...',
+                    prefixIcon: Icons.search,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                      _applyFilters();
+                    },
+                  ),
                 ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-                _applyFilters();
-              },
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF15151F),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: pink.withOpacity(0.2)),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.filter_list, color: pink),
+                    onPressed: _showFilterDialog,
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -145,9 +145,10 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                 children: [
                   ..._selectedTags.map((tag) => Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: Chip(
-                          label: Text(tag),
-                          onDeleted: () {
+                        child: CyberChip(
+                          label: tag,
+                          isSelected: true,
+                          onTap: () {
                             setState(() {
                               _selectedTags.remove(tag);
                             });
@@ -156,16 +157,18 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                         ),
                       )),
                   if (_dateRange != null)
-                    Chip(
-                      label: Text(
-                        '${DateFormat('MMM d').format(_dateRange!.start)} - ${DateFormat('MMM d').format(_dateRange!.end)}',
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: CyberChip(
+                        label: '${DateFormat('MMM d').format(_dateRange!.start)} - ${DateFormat('MMM d').format(_dateRange!.end)}',
+                        isSelected: true,
+                        onTap: () {
+                          setState(() {
+                            _dateRange = null;
+                          });
+                          _applyFilters();
+                        },
                       ),
-                      onDeleted: () {
-                        setState(() {
-                          _dateRange = null;
-                        });
-                        _applyFilters();
-                      },
                     ),
                 ],
               ),
@@ -174,7 +177,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
           // Event List
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: pink))
                 : _filteredEvents.isEmpty
                     ? Center(
                         child: Column(
@@ -182,23 +185,29 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                           children: [
                             Icon(
                               Icons.event_busy,
-                              size: 64,
-                              color: Colors.grey[400],
+                              size: 80,
+                              color: Colors.white.withOpacity(0.1),
                             ),
                             const SizedBox(height: 16),
-                            Text(
+                            const Text(
                               'No events found',
-                              style: Theme.of(context).textTheme.titleLarge,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Try adjusting your filters',
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: TextStyle(color: Colors.white.withOpacity(0.5)),
                             ),
                           ],
                         ),
                       )
                     : RefreshIndicator(
+                        color: pink,
+                        backgroundColor: const Color(0xFF15151F),
                         onRefresh: _loadEvents,
                         child: ListView.builder(
                           padding: const EdgeInsets.all(16),
@@ -236,45 +245,84 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
   }
 
   void _showFilterDialog() {
+    const pink = Color(0xFFFF2E88);
+    const bg = Color(0xFF0B0B0F);
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
+        return CyberGlassCard(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Filters',
-                style: Theme.of(context).textTheme.titleLarge,
+              const Text(
+                'FILTERS',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.calendar_today),
-                title: const Text('Date Range'),
-                subtitle: _dateRange != null
-                    ? Text(
-                        '${DateFormat('MMM d, y').format(_dateRange!.start)} - ${DateFormat('MMM d, y').format(_dateRange!.end)}',
-                      )
-                    : const Text('All dates'),
+              const SizedBox(height: 24),
+              CyberCard(
                 onTap: () async {
                   final range = await showDateRangePicker(
                     context: context,
                     firstDate: DateTime.now(),
                     lastDate: DateTime.now().add(const Duration(days: 365)),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.dark(
+                            primary: pink,
+                            onPrimary: Colors.white,
+                            surface: bg,
+                            onSurface: Colors.white,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
                   );
                   if (range != null) {
                     setState(() {
                       _dateRange = range;
                     });
                     _applyFilters();
-                    Navigator.pop(context);
+                    if (mounted) Navigator.pop(context);
                   }
                 },
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: pink),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Date Range',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            _dateRange != null
+                                ? '${DateFormat('MMM d, y').format(_dateRange!.start)} - ${DateFormat('MMM d, y').format(_dateRange!.end)}'
+                                : 'Select dates',
+                            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              FilledButton(
+              const SizedBox(height: 24),
+              CyberButton(
                 onPressed: () {
                   setState(() {
                     _selectedTags.clear();
@@ -283,8 +331,10 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                   _applyFilters();
                   Navigator.pop(context);
                 },
-                child: const Text('Clear Filters'),
+                text: 'Clear All Filters',
+                color: Colors.grey[800],
               ),
+              const SizedBox(height: 16),
             ],
           ),
         );
@@ -305,132 +355,121 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
+    const pink = Color(0xFFFF2E88);
+    const cyan = Color(0xFF00D2FF);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      child: CyberCard(
         onTap: onTap,
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Event Image
-            if (event.imageUrl != null)
-              CachedNetworkImage(
-                imageUrl: event.imageUrl!,
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  height: 180,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  child: event.imageUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: event.imageUrl!,
+                          height: 160,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            height: 160,
+                            color: Colors.white.withOpacity(0.05),
+                            child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: pink)),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            height: 160,
+                            color: Colors.white.withOpacity(0.05),
+                            child: const Icon(Icons.broken_image, size: 48, color: Colors.white12),
+                          ),
+                        )
+                      : Container(
+                          height: 160,
+                          color: Colors.white.withOpacity(0.05),
+                          child: const Icon(Icons.event, size: 48, color: Colors.white12),
+                        ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: CyberBadge(
+                    label: event.isUpcoming ? 'UPCOMING' : 'PAST',
+                    color: event.isUpcoming ? const Color(0xFF00FF9F) : Colors.grey,
+                    type: CyberBadgeType.glow,
                   ),
                 ),
-                errorWidget: (context, url, error) => Container(
-                  height: 180,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.event,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              )
-            else
-              Container(
-                height: 180,
-                color: Colors.grey[300],
-                child: const Center(
-                  child: Icon(Icons.event, size: 64),
-                ),
-              ),
+              ],
+            ),
 
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Event Title
                   Text(
-                    event.title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    event.title.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.1,
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
-                  // Date and Time
                   Row(
                     children: [
-                      Icon(Icons.calendar_today,
-                          size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
+                      Icon(Icons.calendar_month, size: 16, color: cyan),
+                      const SizedBox(width: 8),
                       Text(
-                        DateFormat('MMM d, y').format(event.date),
-                        style: TextStyle(color: Colors.grey[600]),
+                        DateFormat('EEE, MMM d, y').format(event.date),
+                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
                       ),
-                      const SizedBox(width: 16),
-                      Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
+                      const Spacer(),
+                      Icon(Icons.access_time, size: 16, color: cyan),
+                      const SizedBox(width: 8),
                       Text(
                         event.time,
-                        style: TextStyle(color: Colors.grey[600]),
+                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
 
-                  // Location
                   Row(
                     children: [
-                      Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
+                      Icon(Icons.location_on_outlined, size: 16, color: pink),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           event.location,
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-
-                  // Tags
-                  if (event.tags.isNotEmpty)
+                  
+                  if (event.tags.isNotEmpty) ...[
+                    const SizedBox(height: 16),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: event.tags.take(3).map((tag) {
-                        return Chip(
-                          label: Text(tag),
-                          labelStyle: const TextStyle(fontSize: 12),
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
+                        return CyberBadge(
+                          label: tag,
+                          type: CyberBadgeType.outline,
+                          color: pink.withOpacity(0.5),
                         );
                       }).toList(),
                     ),
-
-                  // Status Badge
-                  const SizedBox(height: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: event.isUpcoming ? Colors.green[100] : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      event.isUpcoming ? 'Upcoming' : 'Past',
-                      style: TextStyle(
-                        color: event.isUpcoming ? Colors.green[900] : Colors.grey[700],
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),

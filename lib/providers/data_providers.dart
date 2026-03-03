@@ -48,7 +48,7 @@ final myRegistrationsProvider = FutureProvider.autoDispose<List<Registration>>((
   return userAsync.when(
     data: (user) async {
       if (user == null) return [];
-      return await eventRepository.getMyRegistrations(user.uuid);
+      return await eventRepository.getMyRegistrations(user.email);
     },
     loading: () => [],
     error: (_, __) => [],
@@ -56,10 +56,10 @@ final myRegistrationsProvider = FutureProvider.autoDispose<List<Registration>>((
 });
 
 // Event Pass Provider (family provider)
-final eventPassProvider = FutureProvider.autoDispose.family<EventPass, String>(
-  (ref, registrationId) async {
+final eventPassProvider = FutureProvider.autoDispose.family<EventPass, Map<String, String>>(
+  (ref, params) async {
     final eventRepository = ref.watch(eventRepositoryProvider);
-    return await eventRepository.getEventPass(registrationId);
+    return await eventRepository.getEventPass(params['email']!, params['eventId']!);
   },
 );
 
@@ -93,19 +93,3 @@ final userAttendanceHistoryProvider = FutureProvider.autoDispose<List<Attendance
     error: (_, __) => [],
   );
 });
-
-// Search Events Provider (family provider with search query)
-final searchEventsProvider = FutureProvider.autoDispose.family<List<Event>, String>(
-  (ref, query) async {
-    final eventRepository = ref.watch(eventRepositoryProvider);
-    return await eventRepository.searchEvents(query);
-  },
-);
-
-// Events by Tags Provider (family provider with tags)
-final eventsByTagsProvider = FutureProvider.autoDispose.family<List<Event>, List<String>>(
-  (ref, tags) async {
-    final eventRepository = ref.watch(eventRepositoryProvider);
-    return await eventRepository.getEventsByTags(tags);
-  },
-);

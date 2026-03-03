@@ -68,6 +68,9 @@ class EventPass {
   final List<TeamMember>? teamMembers;
   final Event event;
   final User user;
+  final String status;
+  final int entryCount;
+  final int exitCount;
 
   const EventPass({
     required this.passId,
@@ -82,6 +85,9 @@ class EventPass {
     this.teamMembers,
     required this.event,
     required this.user,
+    this.status = 'pending',
+    this.entryCount = 0,
+    this.exitCount = 0,
   });
 
   /// Generate QR code payload as JSON string
@@ -114,6 +120,9 @@ class EventPass {
           .toList(),
       event: Event.fromJson(json['event'] as Map<String, dynamic>),
       user: User.fromJson(json['user'] as Map<String, dynamic>),
+      status: json['status'] as String? ?? 'pending',
+      entryCount: json['entryCount'] as int? ?? 0,
+      exitCount: json['exitCount'] as int? ?? 0,
     );
   }
 
@@ -137,18 +146,12 @@ class EventPass {
 
   /// Create a copy with updated fields
   EventPass copyWith({
-    String? passId,
-    String? eventId,
-    String? registrationId,
-    String? userId,
-    DateTime? timestamp,
-    String? qrSignature,
-    RegistrationType? registrationType,
-    String? teamId,
-    String? teamName,
     List<TeamMember>? teamMembers,
     Event? event,
     User? user,
+    String? status,
+    int? entryCount,
+    int? exitCount,
   }) {
     return EventPass(
       passId: passId ?? this.passId,
@@ -163,6 +166,9 @@ class EventPass {
       teamMembers: teamMembers ?? this.teamMembers,
       event: event ?? this.event,
       user: user ?? this.user,
+      status: status ?? this.status,
+      entryCount: entryCount ?? this.entryCount,
+      exitCount: exitCount ?? this.exitCount,
     );
   }
 

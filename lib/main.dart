@@ -10,19 +10,15 @@ import 'screens/events/event_detail_screen.dart';
 import 'screens/registration/event_pass_screen.dart';
 import 'providers/providers.dart';
 import 'models/models.dart';
+import 'widgets/widgets.dart';
 
 void main() {
-  print("🔥 MAIN STARTED");
   WidgetsFlutterBinding.ensureInitialized();
-  print("✅ WIDGETS BINDING INITIALIZED");
-  
   runApp(
     const ProviderScope(
       child: PixelEventsApp(),
     ),
   );
-  
-  print("✅ RUN APP CALLED");
 }
 
 class PixelEventsApp extends StatelessWidget {
@@ -30,36 +26,10 @@ class PixelEventsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("🎨 BUILDING APP");
     return MaterialApp(
       title: 'Pixel Events',
       debugShowCheckedModeBanner: false,
-      // Premium Light Theme
-      theme: FlexThemeData.light(
-        scheme: FlexScheme.deepPurple,
-        surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-        blendLevel: 7,
-        subThemesData: const FlexSubThemesData(
-          blendOnLevel: 10,
-          blendOnColors: false,
-          useTextTheme: true,
-          inputDecoratorBorderType: FlexInputBorderType.outline,
-          inputDecoratorRadius: 12.0,
-          chipRadius: 20.0,
-          cardRadius: 16.0,
-          dialogRadius: 20.0,
-          elevatedButtonRadius: 12.0,
-          filledButtonRadius: 12.0,
-          outlinedButtonRadius: 12.0,
-          fabRadius: 16.0,
-          navigationBarIndicatorRadius: 12.0,
-        ),
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        useMaterial3: true,
-        fontFamily: GoogleFonts.outfit().fontFamily,
-      ),
-      // Premium Dark Theme
-      darkTheme: FlexThemeData.dark(
+      theme: FlexThemeData.dark(
         scheme: FlexScheme.deepPurple,
         surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
         blendLevel: 13,
@@ -82,74 +52,75 @@ class PixelEventsApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: GoogleFonts.outfit().fontFamily,
       ),
-      themeMode: ThemeMode.system,
-      // Define named routes
+      themeMode: ThemeMode.dark,
       initialRoute: '/',
+      onGenerateRoute: (settings) {
+        if (settings.name == '/event-detail') {
+          final event = settings.arguments as Event;
+          return MaterialPageRoute(
+            builder: (context) => EventDetailScreen(event: event),
+          );
+        }
+        if (settings.name == '/event-pass') {
+          if (settings.arguments is EventPass) {
+            return MaterialPageRoute(
+              builder: (context) => EventPassScreen(eventPass: settings.arguments as EventPass),
+            );
+          }
+        }
+        return null;
+      },
       routes: {
-        '/': (context) => const SplashScreen(),
+        '/': (context) => const UnifiedSplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
         '/events': (context) => const EventListScreen(),
-        '/event-detail': (context) {
-          final event = ModalRoute.of(context)!.settings.arguments as Event;
-          return EventDetailScreen(event: event);
-        },
-        '/event-pass': (context) {
-          final pass = ModalRoute.of(context)!.settings.arguments as EventPass;
-          return EventPassScreen(eventPass: pass);
-        },
       },
     );
   }
 }
 
-class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({super.key});
+class UnifiedSplashScreen extends ConsumerStatefulWidget {
+  const UnifiedSplashScreen({super.key});
 
   @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<UnifiedSplashScreen> createState() => _UnifiedSplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> {
+class _UnifiedSplashScreenState extends ConsumerState<UnifiedSplashScreen> {
+  String _loadingMessage = "Initializing Systems";
+  bool _startTear = false;
+
   @override
   void initState() {
     super.initState();
-    print("🚀 SPLASH SCREEN INIT");
-    _initialize();
+    _initializeApp();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => _startTear = true);
+    });
   }
 
-  Future<void> _initialize() async {
-    print("⏳ STARTING INITIALIZATION");
-    
+  Future<void> _initializeApp() async {
     try {
-      // Initialize cache service
-      print("📦 Initializing cache service...");
+      setState(() => _loadingMessage = "Syncing Database");
       await ref.read(cacheServiceProvider).database;
-      print("✅ Cache service initialized");
       
-      // Check authentication status
-      print("🔐 Checking authentication status...");
+      setState(() => _loadingMessage = "Verifying Identity");
       final authService = ref.read(authServiceProvider);
       final isAuthenticated = await authService.isAuthenticated();
-      print("🔐 Authentication status: $isAuthenticated");
       
-      print("✅ INITIALIZATION COMPLETE");
+      setState(() => _loadingMessage = "Welcome to the Future");
+      await Future.delayed(const Duration(milliseconds: 1500)); 
       
-      // Navigate based on auth status
       if (mounted) {
         if (isAuthenticated) {
-          print("✅ USER AUTHENTICATED - NAVIGATING TO HOME");
           Navigator.pushReplacementNamed(context, '/home');
         } else {
-          print("✅ USER NOT AUTHENTICATED - NAVIGATING TO LOGIN");
           Navigator.pushReplacementNamed(context, '/login');
         }
       }
     } catch (e) {
-      print("❌ INITIALIZATION ERROR: $e");
-      // Navigate to login on error
       if (mounted) {
-        print("⚠️ ERROR OCCURRED - NAVIGATING TO LOGIN");
         Navigator.pushReplacementNamed(context, '/login');
       }
     }
@@ -157,42 +128,123 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("🎨 BUILDING SPLASH SCREEN");
+    const bg = Color(0xFF0B0B0F);
+    const pink = Color(0xFFFF2E88);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Using Icon instead of Image.asset to avoid asset loading issues
-            Icon(
-              Icons.event,
-              size: 120,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Pixel Events',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      backgroundColor: bg,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background Gradient Glow
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: pink.withOpacity(0.05),
               ),
             ),
-            const SizedBox(height: 16),
-            const CircularProgressIndicator(
-              color: Colors.white,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Loading...',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
+          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(begin: const Offset(1, 1), end: const Offset(1.5, 1.5), duration: 3.seconds),
+
+          Center(
+            child: SingleChildScrollView( // Added to prevent overflow on smaller screens
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 🔥 PIXEL LOGO with "Tear" entrance
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: pink.withOpacity(0.5), width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: pink.withOpacity(0.2),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        )
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: Image.asset(
+                        "assets/images/app_icon.jpg",
+                        height: 120,
+                        width: 120,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ).animate()
+                   .scale(begin: const Offset(0.0, 0.0), end: const Offset(1, 1), duration: 800.ms, curve: Curves.elasticOut)
+                   .shimmer(delay: 1.seconds, duration: 2.seconds)
+                   .shake(hz: 4, curve: Curves.easeInOutCubic, duration: 500.ms, delay: 100.ms),
+  
+                  const SizedBox(height: 32),
+  
+                  // App Title with "Tear" entrance
+                  const Text(
+                    "PIXEL EVENTS",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 4,
+                      color: Colors.white,
+                    ),
+                  ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.5, end: 0)
+                   .shimmer(delay: 1200.ms, duration: 1500.ms),
+  
+                  const SizedBox(height: 20), // Reduced height to save space
+  
+                  // Integrated Loading Component
+                  CyberLoading(message: _loadingMessage)
+                      .animate().fadeIn(delay: 800.ms),
+                ],
               ),
             ),
+          ),
+
+          // Tear Overlay (Two halves sliding away)
+          if (_startTear) ...[
+            // Top Half
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: MediaQuery.of(context).size.height / 2,
+              child: Container(color: bg),
+            ).animate().slideY(begin: 0, end: -1, duration: 1200.ms, curve: Curves.easeInOutQuart),
+            
+            // Bottom Half
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: MediaQuery.of(context).size.height / 2,
+              child: Container(color: bg),
+            ).animate().slideY(begin: 0, end: 1, duration: 1200.ms, curve: Curves.easeInOutQuart),
           ],
-        ),
+
+          // Version Tag at bottom
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                "POWERED BY PIXEL",
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.3),
+                  fontSize: 10,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+          ).animate().fadeIn(delay: 1500.ms),
+        ],
       ),
     );
   }

@@ -250,12 +250,19 @@ class EventRepository {
     }
   }
 
-  /// Get event pass for a registration
-  Future<EventPass> getEventPass(String registrationId) async {
+  /// Get event pass for a user and event using the NEW flutter pass endpoint
+  Future<EventPass> getEventPass(String email, String eventId) async {
     try {
-      final response = await _apiClient.get('/api/pass/$registrationId');
+      print('🌐 API REQUEST: GET /api/flutter/pass?email=$email&eventId=$eventId');
+      final response = await _apiClient.get(
+        '/api/flutter/pass',
+        queryParameters: {
+          'email': email,
+          'eventId': eventId,
+        },
+      );
+      print('🌐 API RESPONSE: Status ${response.statusCode}');
 
-      // Validate response
       if (response.data is! Map) {
         throw ApiException(
           message: 'Invalid response format: expected event pass object',
@@ -269,6 +276,36 @@ class EventRepository {
       if (e is ApiException) rethrow;
       throw ApiException(
         message: 'Failed to fetch event pass: ${e.toString()}',
+        statusCode: null,
+        type: ApiExceptionType.unknown,
+      );
+    }
+  }
+
+  /// Get event mode configuration using the NEW flutter eventmode endpoint
+  Future<EventMode> getEventMode(String eventId, EventModeType type) async {
+    try {
+      final modeSlug = type.name.toLowerCase();
+      print('🌐 API REQUEST: GET /api/flutter/eventmode/$modeSlug?eventId=$eventId');
+      final response = await _apiClient.get(
+        '/api/flutter/eventmode/$modeSlug',
+        queryParameters: {'eventId': eventId},
+      );
+      print('🌐 API RESPONSE: Status ${response.statusCode}');
+
+      if (response.data is! Map) {
+        throw ApiException(
+          message: 'Invalid response format',
+          statusCode: response.statusCode,
+          type: ApiExceptionType.badRequest,
+        );
+      }
+
+      return EventMode.fromJson(response.data as Map<String, dynamic>);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(
+        message: 'Failed to fetch event mode: ${e.toString()}',
         statusCode: null,
         type: ApiExceptionType.unknown,
       );
@@ -299,15 +336,5 @@ class EventRepository {
   Future<List<Event>> getPastEvents() async {
     final now = DateTime.now();
     return getEvents(endDate: now);
-  }
-
-  /// Search events by query
-  Future<List<Event>> searchEvents(String query) async {
-    return getEvents(search: query);
-  }
-
-  /// Get events by tags
-  Future<List<Event>> getEventsByTags(List<String> tags) async {
-    return getEvents(tags: tags);
   }
 }

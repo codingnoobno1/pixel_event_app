@@ -1,60 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'cyber_card.dart';
 
-/// Reusable QR code widget with customization options
+/// Cyber-themed QR code widget
 class QRCodeWidget extends StatelessWidget {
   final String data;
   final double size;
-  final Color? foregroundColor;
-  final Color? backgroundColor;
-  final bool showBorder;
   final String? label;
 
   const QRCodeWidget({
     super.key,
     required this.data,
     this.size = 200,
-    this.foregroundColor,
-    this.backgroundColor,
-    this.showBorder = true,
     this.label,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    const pink = Color(0xFFFF2E88);
     
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: showBorder
-              ? BoxDecoration(
-                  color: backgroundColor ?? Colors.white,
-                  border: Border.all(
-                    color: Colors.grey[300]!,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                )
-              : null,
+          decoration: BoxDecoration(
+            color: Colors.white, // QR needs white background for best scanning
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: pink.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 2,
+              )
+            ],
+            border: Border.all(color: pink.withOpacity(0.5), width: 2),
+          ),
           child: QrImageView(
             data: data,
             version: QrVersions.auto,
             size: size,
-            foregroundColor: foregroundColor ?? Colors.black,
-            backgroundColor: backgroundColor ?? Colors.white,
+            foregroundColor: Colors.black,
             errorCorrectionLevel: QrErrorCorrectLevel.H,
-            padding: const EdgeInsets.all(0),
+            gapless: false,
           ),
         ),
         if (label != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
-            label!,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
+            label!.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 2,
             ),
             textAlign: TextAlign.center,
           ),
@@ -64,75 +63,72 @@ class QRCodeWidget extends StatelessWidget {
   }
 }
 
-/// QR code display with save and share functionality
-class QRCodeDisplay extends StatelessWidget {
+/// QR code display card for event passes
+class CyberQRPass extends StatelessWidget {
   final String data;
   final String title;
   final String? subtitle;
-  final VoidCallback? onSave;
-  final VoidCallback? onShare;
 
-  const QRCodeDisplay({
+  const CyberQRPass({
     super.key,
     required this.data,
     required this.title,
     this.subtitle,
-    this.onSave,
-    this.onShare,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+    const pink = Color(0xFFFF2E88);
+
+    return CyberCard(
+      color: pink,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 8),
             Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              subtitle!,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 14,
+              ),
               textAlign: TextAlign.center,
             ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 4),
+          ],
+          const SizedBox(height: 24),
+          QRCodeWidget(
+            data: data,
+            size: 200,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.security, color: pink.withOpacity(0.7), size: 16),
+              const SizedBox(width: 8),
               Text(
-                subtitle!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                textAlign: TextAlign.center,
+                "ENCRYPTED PIXEL PASS",
+                style: TextStyle(
+                  color: pink.withOpacity(0.7),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
             ],
-            const SizedBox(height: 16),
-            QRCodeWidget(
-              data: data,
-              size: 250,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (onSave != null) ...[
-                  OutlinedButton.icon(
-                    onPressed: onSave,
-                    icon: const Icon(Icons.download),
-                    label: const Text('Save'),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                if (onShare != null)
-                  ElevatedButton.icon(
-                    onPressed: onShare,
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share'),
-                  ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

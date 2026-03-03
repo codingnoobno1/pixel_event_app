@@ -16,8 +16,13 @@ class Registration {
   final String? semester;
   final List<TeamMember>? members;
   final AttendanceStatus status;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final EventPass? eventPass;
+  final DateTime? entryTime;
+  final DateTime? exitTime;
+  final int entryCount;
+  final int exitCount;
+  final List<ModeProgress>? modeProgress;
 
   const Registration({
     required this.id,
@@ -34,6 +39,11 @@ class Registration {
     required this.status,
     required this.createdAt,
     this.eventPass,
+    this.entryTime,
+    this.exitTime,
+    this.entryCount = 0,
+    this.exitCount = 0,
+    this.modeProgress,
   });
 
   /// Create Registration from JSON
@@ -63,6 +73,13 @@ class Registration {
       eventPass: json['eventPass'] != null
           ? EventPass.fromJson(json['eventPass'] as Map<String, dynamic>)
           : null,
+      entryTime: json['entryTime'] != null ? DateTime.parse(json['entryTime'] as String) : null,
+      exitTime: json['exitTime'] != null ? DateTime.parse(json['exitTime'] as String) : null,
+      entryCount: json['entryCount'] as int? ?? 0,
+      exitCount: json['exitCount'] as int? ?? 0,
+      modeProgress: (json['modeProgress'] as List<dynamic>?)
+          ?.map((e) => ModeProgress.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -88,20 +105,13 @@ class Registration {
 
   /// Create a copy with updated fields
   Registration copyWith({
-    String? id,
-    String? eventId,
-    String? userId,
-    RegistrationType? registrationType,
-    String? teamName,
-    String? teamId,
-    String? name,
-    String? email,
-    String? enrollmentNumber,
-    String? semester,
-    List<TeamMember>? members,
-    AttendanceStatus? status,
     DateTime? createdAt,
     EventPass? eventPass,
+    DateTime? entryTime,
+    DateTime? exitTime,
+    int? entryCount,
+    int? exitCount,
+    List<ModeProgress>? modeProgress,
   }) {
     return Registration(
       id: id ?? this.id,
@@ -118,6 +128,11 @@ class Registration {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       eventPass: eventPass ?? this.eventPass,
+      entryTime: entryTime ?? this.entryTime,
+      exitTime: exitTime ?? this.exitTime,
+      entryCount: entryCount ?? this.entryCount,
+      exitCount: exitCount ?? this.exitCount,
+      modeProgress: modeProgress ?? this.modeProgress,
     );
   }
 
@@ -140,10 +155,39 @@ class Registration {
 
   @override
   int get hashCode {
-    return id.hashCode ^
-        eventId.hashCode ^
-        userId.hashCode ^
-        name.hashCode ^
-        email.hashCode;
+    return id.hashCode ^ eventId.hashCode ^ registrationType.hashCode ^ email.hashCode ^ status.hashCode;
+  }
+}
+
+/// Progress in a specific event mode
+class ModeProgress {
+  final String mode;
+  final String status;
+  final double score;
+  final Map<String, dynamic>? data;
+
+  const ModeProgress({
+    required this.mode,
+    required this.status,
+    required this.score,
+    this.data,
+  });
+
+  factory ModeProgress.fromJson(Map<String, dynamic> json) {
+    return ModeProgress(
+      mode: json['mode'] as String,
+      status: json['status'] as String,
+      score: (json['score'] as num?)?.toDouble() ?? 0.0,
+      data: json['data'] as Map<String, dynamic>?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'mode': mode,
+      'status': status,
+      'score': score,
+      'data': data,
+    };
   }
 }

@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/models.dart';
+import '../../providers/providers.dart';
+import '../../providers/repository_providers.dart';
+import '../../widgets/widgets.dart';
+import '../registration/registration_screen.dart';
+import '../registration/event_pass_screen.dart';
 
-class EventDetailScreen extends StatefulWidget {
+class EventDetailScreen extends ConsumerStatefulWidget {
   final Event event;
 
   const EventDetailScreen({
@@ -11,270 +18,244 @@ class EventDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<EventDetailScreen> createState() => _EventDetailScreenState();
+  ConsumerState<EventDetailScreen> createState() => _EventDetailScreenState();
 }
 
-class _EventDetailScreenState extends State<EventDetailScreen> {
+class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   bool _isRegistered = false;
-  bool _isLoading = false;
+  bool _isCheckingStatus = true;
+  bool _isLoadingPass = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkRegistrationStatus();
+  }
+
+  Future<void> _checkRegistrationStatus() async {
+    final user = ref.read(authServiceProvider).currentUser;
+    if (user == null) return;
+
+    try {
+      final repository = ref.read(eventRepositoryProvider);
+      final registered = await repository.isRegistered(user.email, widget.event.id);
+      if (mounted) {
+        setState(() {
+          _isRegistered = registered;
+          _isCheckingStatus = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isCheckingStatus = false);
+    }
+  }
+
+  Future<void> _handleViewPass() async {
+    final user = ref.read(authServiceProvider).currentUser;
+    if (user == null) return;
+
+    setState(() => _isLoadingPass = true);
+
+    try {
+      final repository = ref.read(eventRepositoryProvider);
+      
+      // 1. Get registrations for the user
+      final registrations = await repository.getMyRegistrations(user.email);
+      
+      // 2. Find the one for this event
+      final registration = registrations.firstWhere(
+        (r) => r.eventId == widget.event.id,
+        orElse: () => throw Exception("Registration not found"),
+      );
+
+      // 3. Fetch the full Event Pass object
+      final pass = await repository.getEventPass(registration.id);
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EventPassScreen(eventPass: pass),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorDialog.show(context, message: "Could not load pass: ${e.toString()}");
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingPass = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFF0B0B0F);
+    const pink = Color(0xFFFF2E88);
+    const cyan = Color(0xFF00D2FF);
+
     return Scaffold(
+      backgroundColor: bg,
       body: CustomScrollView(
         slivers: [
-          // App Bar with Image
           SliverAppBar(
-            expandedHeight: 250,
+            expandedHeight: 300,
             pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                widget.event.title,
-                style: const TextStyle(
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 3.0,
-                      color: Colors.black45,
-                    ),
-                  ],
-                ),
-              ),
-              background: widget.event.imageUrl != null
-                  ? Image.network(
-                      widget.event.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.event, size: 64),
-                        );
-                      },
-                    )
-                  : Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.event, size: 64),
-                    ),
+            backgroundColor: bg,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-          ),
-
-          // Content
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
                 children: [
-                  // Event Info Cards
-                  _buildInfoCard(
-                    icon: Icons.calendar_today,
-                    title: 'Date',
-                    subtitle: DateFormat('EEEE, MMMM d, y').format(widget.event.date),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoCard(
-                    icon: Icons.access_time,
-                    title: 'Time',
-                    subtitle: widget.event.time,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoCard(
-                    icon: Icons.location_on,
-                    title: 'Location',
-                    subtitle: widget.event.location,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoCard(
-                    icon: Icons.people,
-                    title: 'Participants',
-                    subtitle: '${widget.event.participantCount} registered',
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Description
-                  Text(
-                    'About',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.event.description,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Tags
-                  if (widget.event.tags.isNotEmpty) ...[
-                    Text(
-                      'Tags',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                  if (widget.event.imageUrl != null)
+                    Image.network(widget.event.imageUrl!, fit: BoxFit.cover)
+                  else
+                    Container(color: Colors.white.withOpacity(0.05)),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          bg.withOpacity(0.8),
+                          bg,
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.event.tags.map((tag) {
-                        return Chip(
-                          label: Text(tag),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Admin Actions (TODO: Show only for admins)
-                  // _buildAdminActions(),
-
-                  const SizedBox(height: 80), // Space for FAB
+                  ),
                 ],
               ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(24),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.event.title.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                    CyberBadge(
+                      label: widget.event.isUpcoming ? "UPCOMING" : "PAST",
+                      color: widget.event.isUpcoming ? const Color(0xFF00FF9F) : Colors.grey,
+                      type: CyberBadgeType.glow,
+                    ),
+                  ],
+                ).animate().fadeIn().slideX(),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    _buildQuickInfo(Icons.calendar_month, DateFormat('MMM d, y').format(widget.event.date), "Date"),
+                    _buildQuickInfo(Icons.access_time, widget.event.time, "Time"),
+                    _buildQuickInfo(Icons.people_outline, "${widget.event.participantCount}", "Capacity"),
+                  ],
+                ).animate().fadeIn(delay: 200.ms),
+                const SizedBox(height: 32),
+                CyberCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: pink.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.location_on, color: pink),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("VENUE", style: TextStyle(color: pink, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1)),
+                            Text(widget.event.location, style: const TextStyle(color: Colors.white, fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 400.ms),
+                const SizedBox(height: 32),
+                const Text("ABOUT THE EVENT", style: TextStyle(color: cyan, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                const SizedBox(height: 12),
+                Text(
+                  widget.event.description,
+                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16, height: 1.6),
+                ),
+                const SizedBox(height: 32),
+                if (widget.event.tags.isNotEmpty) ...[
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: widget.event.tags.map((tag) => CyberBadge(
+                      label: tag,
+                      type: CyberBadgeType.outline,
+                      color: pink.withOpacity(0.5),
+                    )).toList(),
+                  ),
+                ],
+                const SizedBox(height: 120),
+              ]),
             ),
           ),
         ],
       ),
-      floatingActionButton: widget.event.isUpcoming
-          ? FloatingActionButton.extended(
-              onPressed: _isLoading
-                  ? null
-                  : () {
-                      if (_isRegistered) {
-                        _showEventPass();
-                      } else {
-                        _showRegistrationDialog();
-                      }
-                    },
-              icon: Icon(_isRegistered ? Icons.qr_code : Icons.app_registration),
-              label: Text(_isRegistered ? 'View Pass' : 'Register'),
-            )
-          : null,
-    );
-  }
-
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
+      bottomSheet: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border(top: Border.all(color: Colors.white10).top),
         ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: (_isCheckingStatus || _isLoadingPass)
+            ? const SizedBox(
+                height: 56,
+                child: Center(child: CircularProgressIndicator(color: pink)),
+              )
+            : CyberButton(
+                onPressed: () {
+                  if (_isRegistered) {
+                    _handleViewPass();
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RegistrationScreen(event: widget.event),
+                      ),
+                    ).then((_) => _checkRegistrationStatus());
+                  }
+                },
+                text: _isRegistered ? "VIEW YOUR PASS" : "REGISTER NOW",
+                icon: _isRegistered ? Icons.qr_code : Icons.bolt,
+                color: _isRegistered ? const Color(0xFF00FF9F) : pink,
+              ),
       ),
     );
   }
 
-  void _showRegistrationDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (context, scrollController) {
-            return Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Register for Event',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: ListView(
-                      controller: scrollController,
-                      children: [
-                        // TODO: Add registration form
-                        const Text('Registration form will be here'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      // TODO: Navigate to registration screen
-                    },
-                    child: const Text('Continue to Registration'),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showEventPass() {
-    // TODO: Navigate to event pass screen
-    Navigator.of(context).pushNamed('/event-pass');
-  }
-
-  Widget _buildAdminActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Admin Actions',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: Navigate to attendance management
-                },
-                icon: const Icon(Icons.people),
-                label: const Text('View Attendance'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: Navigate to QR scanner
-                },
-                icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Scan QR'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: () {
-            // TODO: Navigate to event lobby
-          },
-          icon: const Icon(Icons.dashboard),
-          label: const Text('Event Lobby'),
-        ),
-      ],
+  Widget _buildQuickInfo(IconData icon, String value, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, color: const Color(0xFF00D2FF), size: 24),
+          const SizedBox(height: 8),
+          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+          Text(label.toUpperCase(), style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, letterSpacing: 1)),
+        ],
+      ),
     );
   }
 }

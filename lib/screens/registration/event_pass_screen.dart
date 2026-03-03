@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/models.dart';
+import '../../widgets/widgets.dart';
 
 class EventPassScreen extends StatelessWidget {
   final EventPass eventPass;
@@ -13,251 +14,257 @@ class EventPassScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFF0B0B0F);
+    const pink = Color(0xFFFF2E88);
+    const cyan = Color(0xFF00D2FF);
+
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text('Event Pass'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              // TODO: Implement share functionality
-            },
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          "DIGITAL PASS",
+          style: TextStyle(
+            letterSpacing: 2,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () {
-              // TODO: Implement save to gallery
-            },
-          ),
-        ],
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Pass Card
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0B0B0F), Color(0xFF15151F)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            children: [
+              // 🔥 PREMIUM QR PASS CARD
+              CyberQRPass(
+                data: eventPass.qrPayload,
+                title: eventPass.event.title,
+                subtitle: DateFormat('EEEE, MMM d, y').format(eventPass.event.date),
+              ).animate().fadeIn().scale(duration: 600.ms, curve: Curves.elasticOut),
+
+              const SizedBox(height: 32),
+
+              // INFO GRID
+              Row(
+                children: [
+                  _buildPassInfo(Icons.access_time, eventPass.event.time, "START TIME"),
+                  _buildPassInfo(Icons.location_on_outlined, eventPass.event.location, "VENUE"),
+                ],
+              ).animate().fadeIn(delay: 300.ms),
+
+              const SizedBox(height: 16),
+
+              // Entry/Exit Status
+              CyberGlassCard(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatusItem(
+                      "ENTRY", 
+                      eventPass.entryCount > 0 ? "RECORDED" : "PENDING", 
+                      eventPass.entryCount > 0 ? const Color(0xFF00FF9F) : Colors.orange
+                    ),
+                    const VerticalDivider(color: Colors.white10, width: 1),
+                    _buildStatusItem(
+                      "EXIT", 
+                      eventPass.exitCount > 0 ? "RECORDED" : "PENDING", 
+                      eventPass.exitCount > 0 ? pink : Colors.grey
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(delay: 400.ms),
+
+              const SizedBox(height: 32),
+
+              // ATTENDEE DETAILS
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "ATTENDEE DETAILS",
+                  style: TextStyle(
+                    color: cyan,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              CyberGlassCard(
                 child: Column(
                   children: [
-                    // Event Title
-                    Text(
-                      eventPass.event.title,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // Event Date & Time
-                    Text(
-                      DateFormat('EEEE, MMMM d, y').format(eventPass.event.date),
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      eventPass.event.time,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // Location
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.location_on, size: 16),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            eventPass.event.location,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // QR Code
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: QrImageView(
-                        data: eventPass.qrPayload,
-                        version: QrVersions.auto,
-                        size: 250,
-                        backgroundColor: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Pass ID
-                    Text(
-                      'Pass ID: ${eventPass.passId}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // User Info
-                    const Divider(),
-                    const SizedBox(height: 16),
-                    _buildInfoRow(
-                      context,
-                      'Name',
-                      eventPass.user.name,
-                    ),
-                    _buildInfoRow(
-                      context,
-                      'Email',
-                      eventPass.user.email,
-                    ),
-                    _buildInfoRow(
-                      context,
-                      'Enrollment',
-                      eventPass.user.enrollmentNumber,
-                    ),
-                    _buildInfoRow(
-                      context,
-                      'Semester',
-                      '${eventPass.user.semester}',
-                    ),
-
-                    // Team Info (if team registration)
+                    _buildDetailRow("NAME", eventPass.user.name),
+                    _buildDetailRow("EMAIL", eventPass.user.email),
+                    _buildDetailRow("ENROLLMENT", eventPass.user.enrollmentNumber),
+                    _buildDetailRow("SEMESTER", "SEM ${eventPass.user.semester}"),
                     if (eventPass.registrationType == RegistrationType.team) ...[
-                      const SizedBox(height: 16),
-                      const Divider(),
-                      const SizedBox(height: 16),
-                      _buildInfoRow(
-                        context,
-                        'Team Name',
-                        eventPass.teamName ?? 'N/A',
-                      ),
-                      if (eventPass.teamMembers != null &&
-                          eventPass.teamMembers!.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          'Team Members',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...eventPass.teamMembers!.map((member) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.person, size: 16),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      '${member.name} (${member.enrollmentNumber})',
-                                      style: Theme.of(context).textTheme.bodyMedium,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )),
-                      ],
+                      const Divider(color: Colors.white10, height: 24),
+                      _buildDetailRow("TEAM", eventPass.teamName ?? "N/A"),
+                      _buildDetailRow("TEAM ID", eventPass.teamId ?? "N/A"),
                     ],
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
+              ).animate().fadeIn(delay: 500.ms),
 
-            // Instructions
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+              const SizedBox(height: 32),
+
+              // INSTRUCTIONS
+              CyberCard(
+                color: cyan.withOpacity(0.3),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Instructions',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                        const Icon(Icons.info_outline, color: cyan, size: 20),
+                        const SizedBox(width: 12),
+                        const Text(
+                          "ENTRY INSTRUCTIONS",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    _buildInstruction('1', 'Show this QR code at the event entrance'),
-                    _buildInstruction('2', 'The QR code will be scanned for entry'),
-                    _buildInstruction('3', 'Scan again when leaving the event'),
-                    _buildInstruction('4', 'Keep this pass accessible offline'),
+                    const SizedBox(height: 16),
+                    _buildStep("1", "Keep this QR code ready at the entrance."),
+                    _buildStep("2", "Security will scan this pass for validation."),
+                    _buildStep("3", "Do not share this QR code with others."),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
+              ).animate().fadeIn(delay: 700.ms),
 
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // TODO: Save to device
-                    },
-                    icon: const Icon(Icons.download),
-                    label: const Text('Save Pass'),
+              const SizedBox(height: 40),
+
+              // ACTION BUTTONS
+              Row(
+                children: [
+                  Expanded(
+                    child: CyberButton(
+                      onPressed: () {},
+                      text: "SAVE PASS",
+                      icon: Icons.download_rounded,
+                      color: Colors.grey[800],
+                      height: 50,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      // TODO: Share pass
-                    },
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share'),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 16),
+                  if (eventPass.entryCount > 0 && eventPass.event.activeMode != null)
+                    Expanded(
+                      child: CyberButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context, 
+                            '/event-lobby', 
+                            arguments: {'event': eventPass.event, 'pass': eventPass}
+                          );
+                        },
+                        text: "ENTER LOBBY",
+                        icon: Icons.meeting_room_outlined,
+                        color: cyan,
+                        height: 50,
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: CyberButton(
+                        onPressed: () {},
+                        text: "SHARE",
+                        icon: Icons.share_rounded,
+                        height: 50,
+                      ),
+                    ),
+                ],
+              ).animate().fadeIn(delay: 900.ms),
+              
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value) {
+  Widget _buildPassInfo(IconData icon, String value, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, color: const Color(0xFF00D2FF), size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 9, letterSpacing: 1),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            value.toUpperCase(),
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep(String num, String text) {
+    const cyan = Color(0xFF00D2FF);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+          Container(
+            width: 20,
+            height: 20,
+            decoration: const BoxDecoration(color: cyan, shape: BoxShape.circle),
+            child: Center(
+              child: Text(
+                num,
+                style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+              text,
+              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
             ),
           ),
         ],
@@ -265,36 +272,19 @@ class EventPassScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInstruction(String number, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: Colors.blue[100],
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                number,
-                style: TextStyle(
-                  color: Colors.blue[900],
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(text),
-          ),
-        ],
-      ),
+  Widget _buildStatusItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
 }

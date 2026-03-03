@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'cyber_button.dart';
+import 'cyber_glass_card.dart';
+import 'cyber_badge.dart';
 
-/// Error dialog widget for displaying errors to users
+/// Cyber-themed Error dialog
 class ErrorDialog extends StatelessWidget {
   final String title;
   final String message;
@@ -8,58 +11,120 @@ class ErrorDialog extends StatelessWidget {
 
   const ErrorDialog({
     super.key,
-    this.title = 'Error',
+    this.title = 'SYSTEM ERROR',
     required this.message,
     this.onRetry,
   });
 
-  /// Show error dialog
   static Future<void> show(
     BuildContext context, {
-    String title = 'Error',
+    String title = 'SYSTEM ERROR',
     required String message,
     VoidCallback? onRetry,
   }) {
-    return showDialog(
+    return showGeneralDialog(
       context: context,
-      builder: (context) => ErrorDialog(
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) => ErrorDialog(
         title: title,
         message: message,
         onRetry: onRetry,
       ),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+          scale: anim1.value,
+          child: Opacity(
+            opacity: anim1.value,
+            child: child,
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red),
-          const SizedBox(width: 8),
-          Text(title),
-        ],
-      ),
-      content: Text(message),
-      actions: [
-        if (onRetry != null)
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              onRetry!();
-            },
-            child: const Text('Retry'),
+    const pink = Color(0xFFFF2E88);
+    const bg = Color(0xFF0B0B0F);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Material(
+          color: Colors.transparent,
+          child: CyberGlassCard(
+            color: Colors.redAccent,
+            opacity: 0.15,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.redAccent.withOpacity(0.1),
+                    border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+                  ),
+                  child: const Icon(Icons.warning_amber_rounded, size: 40, color: Colors.redAccent),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    if (onRetry != null) ...[
+                      Expanded(
+                        child: CyberButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onRetry!();
+                          },
+                          text: 'RETRY',
+                          height: 45,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: CyberButton(
+                        onPressed: () => Navigator.pop(context),
+                        text: onRetry != null ? 'CANCEL' : 'DISMISS',
+                        color: Colors.grey[800],
+                        height: 45,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(onRetry != null ? 'Cancel' : 'OK'),
         ),
-      ],
+      ),
     );
   }
 }
 
-/// Success dialog widget for displaying success messages
+/// Cyber-themed Success dialog
 class SuccessDialog extends StatelessWidget {
   final String title;
   final String message;
@@ -67,111 +132,98 @@ class SuccessDialog extends StatelessWidget {
 
   const SuccessDialog({
     super.key,
-    this.title = 'Success',
+    this.title = 'PROCESS COMPLETE',
     required this.message,
     this.onOk,
   });
 
-  /// Show success dialog
   static Future<void> show(
     BuildContext context, {
-    String title = 'Success',
+    String title = 'PROCESS COMPLETE',
     required String message,
     VoidCallback? onOk,
   }) {
-    return showDialog(
+    return showGeneralDialog(
       context: context,
-      builder: (context) => SuccessDialog(
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) => SuccessDialog(
         title: title,
         message: message,
         onOk: onOk,
       ),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+          scale: anim1.value,
+          child: Opacity(
+            opacity: anim1.value,
+            child: child,
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.check_circle_outline, color: Colors.green),
-          const SizedBox(width: 8),
-          Text(title),
-        ],
+    const accent = Color(0xFF00FF9F);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Material(
+          color: Colors.transparent,
+          child: CyberGlassCard(
+            color: accent,
+            opacity: 0.15,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accent.withOpacity(0.1),
+                    border: Border.all(color: accent.withOpacity(0.5)),
+                  ),
+                  child: const Icon(Icons.check_circle_outline, size: 40, color: accent),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                CyberButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    onOk?.call();
+                  },
+                  text: 'CONFIRM',
+                  color: accent,
+                  height: 45,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-            onOk?.call();
-          },
-          child: const Text('OK'),
-        ),
-      ],
-    );
-  }
-}
-
-/// Confirmation dialog widget
-class ConfirmDialog extends StatelessWidget {
-  final String title;
-  final String message;
-  final String confirmText;
-  final String cancelText;
-  final bool isDangerous;
-
-  const ConfirmDialog({
-    super.key,
-    required this.title,
-    required this.message,
-    this.confirmText = 'Confirm',
-    this.cancelText = 'Cancel',
-    this.isDangerous = false,
-  });
-
-  /// Show confirmation dialog
-  static Future<bool> show(
-    BuildContext context, {
-    required String title,
-    required String message,
-    String confirmText = 'Confirm',
-    String cancelText = 'Cancel',
-    bool isDangerous = false,
-  }) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => ConfirmDialog(
-        title: title,
-        message: message,
-        confirmText: confirmText,
-        cancelText: cancelText,
-        isDangerous: isDangerous,
-      ),
-    );
-    return result ?? false;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(cancelText),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: isDangerous
-              ? TextButton.styleFrom(
-                  foregroundColor: Colors.red,
-                )
-              : null,
-          child: Text(confirmText),
-        ),
-      ],
     );
   }
 }

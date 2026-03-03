@@ -48,6 +48,48 @@ class AuthService {
     }
   }
 
+  /// Register a new user
+  Future<void> register({
+    required String name,
+    required String enrollmentNumber,
+    required String course,
+    required String semester,
+    required String email,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/api/register',
+        data: {
+          'name': name,
+          'enrollmentNumber': enrollmentNumber,
+          'course': course,
+          'semester': semester,
+          'email': email,
+          'password': password,
+          'confirmPassword': confirmPassword,
+        },
+      );
+
+      if (response.statusCode != 201) {
+        final error = response.data['error'] ?? 'Registration failed';
+        throw ApiException(
+          message: error,
+          statusCode: response.statusCode,
+          type: ApiExceptionType.badRequest,
+        );
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(
+        message: 'Registration failed: ${e.toString()}',
+        statusCode: null,
+        type: ApiExceptionType.unknown,
+      );
+    }
+  }
+
   /// Login with email and password
   /// Returns User on success, throws ApiException on failure
   Future<User> login(String email, String password) async {
