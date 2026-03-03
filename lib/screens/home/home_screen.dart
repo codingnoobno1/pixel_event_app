@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../events/event_list_screen.dart';
 import '../profile/my_passes_screen.dart';
 import '../profile/profile_screen.dart';
+import 'tabs/event_mode_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = const [
     EventListScreen(),
     MyPassesScreen(),
+    EventModeTab(), // New 4th tab (Event Mode)
     ProfileScreen(),
   ];
 
@@ -27,8 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: bg,
-
-      // 🔥 APP BAR CYBER STYLE
       appBar: AppBar(
         backgroundColor: bg,
         elevation: 0,
@@ -36,8 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(
           children: [
             const SizedBox(width: 12),
-
-            // pixel logo
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
@@ -47,9 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fit: BoxFit.cover,
               ),
             ),
-
             const SizedBox(width: 12),
-
             const Text(
               "PIXEL EVENTS",
               style: TextStyle(
@@ -61,23 +57,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-
-      // 🔥 BODY
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF0B0B0F),
-              Color(0xFF090912),
-            ],
+            colors: [Color(0xFF0B0B0F), Color(0xFF090912)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: _screens[_selectedIndex],
       ),
-
-      // 🔥 CYBER BOTTOM NAV
       bottomNavigationBar: Container(
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
@@ -85,11 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: card,
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
-            BoxShadow(
-              color: pink.withOpacity(0.3),
-              blurRadius: 20,
-              spreadRadius: 1,
-            )
+            BoxShadow(color: pink.withOpacity(0.3), blurRadius: 20, spreadRadius: 1)
           ],
         ),
         child: NavigationBar(
@@ -100,8 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() => _selectedIndex = index);
           },
           indicatorColor: pink.withOpacity(0.2),
-          labelBehavior:
-              NavigationDestinationLabelBehavior.onlyShowSelected,
+          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.event_outlined),
@@ -112,6 +96,11 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(Icons.qr_code_outlined),
               selectedIcon: Icon(Icons.qr_code),
               label: "Passes",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.bolt_outlined), // Event Mode Icon
+              selectedIcon: Icon(Icons.bolt),
+              label: "Live Mode",
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),

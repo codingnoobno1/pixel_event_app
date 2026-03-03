@@ -1,248 +1,161 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/models.dart';
+import '../../providers/providers.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // TODO: Get user from provider
-    final User? user = null;
+  Widget build(BuildContext context, WidgetRef ref) {
+    const pink = Color(0xFFFF2E88);
+    final userAsync = ref.watch(currentUserProvider);
 
-    if (user == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return userAsync.when(
+      data: (user) {
+        if (user == null) {
+          return const Center(child: Text("Not logged in", style: TextStyle(color: Colors.white70)));
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).pushNamed('/settings');
-            },
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Profile Header
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    child: Text(
-                      user.name[0].toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 40,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user.name,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user.email,
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: user.isAdmin
-                          ? Colors.purple[100]
-                          : Colors.blue[100],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      user.role.name.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: user.isAdmin ? Colors.purple[900] : Colors.blue[900],
-                      ),
-                    ),
-                  ),
-                ],
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text('MY PROFILE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2)),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.redAccent),
+                onPressed: () => _showLogoutDialog(context, ref),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 24),
+          body: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              // Profile Header
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: pink.withOpacity(0.5), width: 2),
+                      ),
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: pink.withOpacity(0.1),
+                        child: Text(
+                          user.name[0].toUpperCase(),
+                          style: const TextStyle(fontSize: 40, color: pink, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      user.name.toUpperCase(),
+                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.email,
+                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
 
-          // User Details
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.badge),
-                  title: const Text('Enrollment Number'),
-                  subtitle: Text(user.enrollmentNumber),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.school),
-                  title: const Text('Course'),
-                  subtitle: Text(user.course),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.calendar_today),
-                  title: const Text('Semester'),
-                  subtitle: Text('Semester ${user.semester}'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+              _buildInfoSection(context, "ACADEMIC INFO", [
+                _buildInfoTile(Icons.badge_outlined, "Enrollment", user.enrollmentNumber),
+                _buildInfoTile(Icons.school_outlined, "Course", user.course),
+                _buildInfoTile(Icons.calendar_month_outlined, "Semester", "Semester ${user.semester}"),
+              ]),
 
-          // Actions
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.qr_code),
-                  title: const Text('My Event Passes'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.of(context).pushNamed('/my-passes');
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.history),
-                  title: const Text('Event History'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // TODO: Navigate to history
-                  },
-                ),
-                if (user.isAdmin) ...[
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.admin_panel_settings),
-                    title: const Text('Admin Dashboard'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // TODO: Navigate to admin dashboard
-                    },
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-          // Settings & Logout
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.settings),
-                  title: const Text('Settings'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.of(context).pushNamed('/settings');
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.help_outline),
-                  title: const Text('Help & Support'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // TODO: Navigate to help
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('About'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    _showAboutDialog(context);
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+              _buildInfoSection(context, "ACCOUNT STATUS", [
+                _buildInfoTile(Icons.security_outlined, "Role", user.role.name.toUpperCase(), 
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(color: pink.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                    child: Text(user.role.name.toUpperCase(), style: const TextStyle(color: pink, fontSize: 10, fontWeight: FontWeight.bold)),
+                  )),
+              ]),
 
-          // Logout Button
-          FilledButton.icon(
-            onPressed: () {
-              _showLogoutDialog(context);
-            },
-            icon: const Icon(Icons.logout),
-            label: const Text('Logout'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
+              const SizedBox(height: 40),
+              
+              OutlinedButton.icon(
+                onPressed: () => _showLogoutDialog(context, ref),
+                icon: const Icon(Icons.logout),
+                label: const Text("SIGN OUT"),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.redAccent,
+                  side: const BorderSide(color: Colors.redAccent),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-        ],
-      ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: pink)),
+      error: (e, _) => Center(child: Text("Error fetching profile: $e")),
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  Widget _buildInfoSection(BuildContext context, String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(color: Color(0xFF00D2FF), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String label, String value, {Widget? trailing}) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white38, size: 20),
+      title: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+      subtitle: Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+      trailing: trailing,
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        backgroundColor: const Color(0xFF1A1A2F),
+        title: const Text('LOGOUT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to terminate your session?', style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('CANCEL', style: TextStyle(color: Colors.white38)),
           ),
           FilledButton(
-            onPressed: () {
-              // TODO: Implement logout
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/login',
-                (route) => false,
-              );
+            onPressed: () async {
+              await ref.read(authServiceProvider).logout();
+              if (context.mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+              }
             },
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Logout'),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('LOGOUT'),
           ),
         ],
       ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showAboutDialog(
-      context: context,
-      applicationName: 'Pixel Events',
-      applicationVersion: '1.0.0',
-      applicationIcon: Image.asset(
-        'assets/images/app_icon.jpg',
-        width: 64,
-        height: 64,
-      ),
-      children: [
-        const Text('Event Attendance Management System'),
-        const SizedBox(height: 8),
-        const Text('Developed for efficient event check-in and check-out tracking.'),
-      ],
     );
   }
 }

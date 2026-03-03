@@ -7,9 +7,14 @@ import 'service_providers.dart';
 
 // Current User Stream Provider
 // Listens to auth state changes and emits current user
-final currentUserProvider = StreamProvider<User?>((ref) {
+final currentUserProvider = StreamProvider<User?>((ref) async* {
   final authService = ref.watch(authServiceProvider);
-  return authService.authStateChanges;
+  
+  // 1. Check if we already have a user (initialization might have finished)
+  yield authService.currentUser;
+  
+  // 2. Stream all future changes
+  yield* authService.authStateChanges;
 });
 
 // Is Authenticated Provider

@@ -37,7 +37,7 @@ class Registration {
     this.semester,
     this.members,
     required this.status,
-    required this.createdAt,
+    this.createdAt,
     this.eventPass,
     this.entryTime,
     this.exitTime,
@@ -69,7 +69,7 @@ class Registration {
       status: AttendanceStatus.fromJson(json['status'] as String? ?? 'pending'),
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
-          : DateTime.now(),
+          : null,
       eventPass: json['eventPass'] != null
           ? EventPass.fromJson(json['eventPass'] as Map<String, dynamic>)
           : null,
@@ -98,7 +98,7 @@ class Registration {
       'semester': semester,
       'members': members?.map((e) => e.toJson()).toList(),
       'status': status.toJson(),
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': createdAt?.toIso8601String(),
       'eventPass': eventPass?.toJson(),
     };
   }

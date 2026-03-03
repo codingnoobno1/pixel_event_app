@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../models/models.dart';
 import '../../../widgets/widgets.dart';
+import '../../../providers/providers.dart';
 
 class QuizModeScreen extends ConsumerStatefulWidget {
   final Event event;
@@ -17,18 +18,45 @@ class QuizModeScreen extends ConsumerStatefulWidget {
 }
 
 class _QuizModeScreenState extends ConsumerState<QuizModeScreen> {
+  List<dynamic> _subModes = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuizConfig();
+  }
+
+  Future<void> _loadQuizConfig() async {
+    try {
+      final repo = ref.read(eventRepositoryProvider);
+      final modeData = await repo.getEventMode(widget.event.id, EventModeType.quiz);
+      setState(() {
+        _subModes = modeData.config['subModes'] ?? [
+          {'id': 'rapid-fire', 'name': 'RAPID FIRE', 'description': '10 seconds per question. Think fast!', 'icon': 'bolt'},
+          {'id': 'long-thinking', 'name': 'DEEP DIVE', 'description': 'Complex scenarios. Depth matters.', 'icon': 'psychology'},
+        ];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  IconData _getIcon(String? iconName) {
+    switch (iconName) {
+      case 'bolt': return Icons.bolt;
+      case 'psychology': return Icons.psychology;
+      case 'school': return Icons.school;
+      case 'stars': return Icons.stars;
+      default: return Icons.quiz;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFF0B0B0F);
     const pink = Color(0xFFFF2E88);
-    const cyan = Color(0xFF00D2FF);
-
-    final subModes = [
-      {'id': 'rapid-fire', 'name': 'RAPID FIRE', 'desc': '10 seconds per question. Think fast!', 'icon': Icons.bolt},
-      {'id': 'long-thinking', 'name': 'DEEP DIVE', 'desc': 'Complex scenarios. Depth matters.', 'icon': Icons.psychology},
-      {'id': 'teachers-quiz', 'name': 'FACULTY SPECIAL', 'desc': 'Questions from your professors.', 'icon': Icons.school},
-      {'id': 'custom-quiz', 'name': 'LIVE CHALLENGE', 'desc': 'Surprise event category.', 'icon': Icons.stars},
-    ];
 
     return Scaffold(
       backgroundColor: bg,
@@ -41,34 +69,36 @@ class _QuizModeScreenState extends ConsumerState<QuizModeScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "SELECT CATEGORY",
-              style: TextStyle(color: pink, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 12),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: pink))
+        : Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "SELECT CATEGORY",
+                  style: TextStyle(color: pink, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 12),
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: _subModes.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 20),
+                    itemBuilder: (context, index) {
+                      final mode = _subModes[index];
+                      return _buildSubModeCard(
+                        _getIcon(mode['icon'] as String?),
+                        (mode['name'] as String? ?? 'QUIZ').toUpperCase(),
+                        mode['description'] as String? ?? 'Start your challenge',
+                        index
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: ListView.separated(
-                itemCount: subModes.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 20),
-                itemBuilder: (context, index) {
-                  final mode = subModes[index];
-                  return _buildSubModeCard(
-                    mode['icon'] as IconData,
-                    mode['name'] as String,
-                    mode['desc'] as String,
-                    index
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 

@@ -8,6 +8,10 @@ import 'screens/home/home_screen.dart';
 import 'screens/events/event_list_screen.dart';
 import 'screens/events/event_detail_screen.dart';
 import 'screens/registration/event_pass_screen.dart';
+import 'screens/events/event_lobby_screen.dart';
+import 'screens/events/modes/quiz_mode_screen.dart';
+import 'screens/events/modes/voting_mode_screen.dart';
+import 'screens/events/modes/treasure_hunt_screen.dart';
 import 'providers/providers.dart';
 import 'models/models.dart';
 import 'widgets/widgets.dart';
@@ -67,6 +71,33 @@ class PixelEventsApp extends StatelessWidget {
               builder: (context) => EventPassScreen(eventPass: settings.arguments as EventPass),
             );
           }
+        }
+        if (settings.name == '/event-lobby') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => EventLobbyScreen(
+              event: args['event'] as Event,
+              pass: args['pass'] as EventPass,
+            ),
+          );
+        }
+        if (settings.name == '/quiz-mode') {
+          final event = settings.arguments as Event;
+          return MaterialPageRoute(
+            builder: (context) => QuizModeScreen(event: event),
+          );
+        }
+        if (settings.name == '/voting-mode') {
+          final event = settings.arguments as Event;
+          return MaterialPageRoute(
+            builder: (context) => VotingModeScreen(event: event),
+          );
+        }
+        if (settings.name == '/treasure-hunt') {
+          final event = settings.arguments as Event;
+          return MaterialPageRoute(
+            builder: (context) => TreasureHuntScreen(event: event),
+          );
         }
         return null;
       },

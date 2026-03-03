@@ -28,8 +28,8 @@ class ApiClient {
         'Accept': 'application/json',
       },
       validateStatus: (status) {
-        // Accept all status codes to handle them in interceptors
-        return status != null && status < 500;
+        // Standard success status codes
+        return status != null && status >= 200 && status < 300;
       },
     );
 
@@ -94,12 +94,14 @@ class ApiClient {
     DioException error,
     ErrorInterceptorHandler handler,
   ) async {
-    if (error.response?.statusCode == 401) {
-      // Token expired or invalid - trigger logout
+    final statusCode = error.response?.statusCode;
+    
+    // Auto-logout on 401
+    if (statusCode == 401) {
       await _secureStorage.clearAuthData();
-      // TODO: Navigate to login screen or emit auth state change
     }
 
+    // Pass error to next interceptor
     handler.next(error);
   }
 

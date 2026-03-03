@@ -51,13 +51,17 @@ class EventRepository {
       final List<dynamic> data = response.data;
       return data.map((json) => Event.fromJson(json as Map<String, dynamic>)).toList();
     } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(
-        message: 'Failed to fetch events: ${e.toString()}',
-        statusCode: null,
-        type: ApiExceptionType.unknown,
-      );
+      throw _handleRepoError(e, 'Failed to fetch events');
     }
+  }
+
+  ApiException _handleRepoError(Object e, String prefix) {
+    if (e is ApiException) return e;
+    return ApiException(
+      message: '$prefix: ${e.toString()}',
+      statusCode: null,
+      type: ApiExceptionType.unknown,
+    );
   }
 
   /// Get event by ID
@@ -76,12 +80,7 @@ class EventRepository {
 
       return Event.fromJson(response.data as Map<String, dynamic>);
     } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(
-        message: 'Failed to fetch event: ${e.toString()}',
-        statusCode: null,
-        type: ApiExceptionType.unknown,
-      );
+      throw _handleRepoError(e, 'Failed to fetch event');
     }
   }
 
@@ -104,12 +103,7 @@ class EventRepository {
 
       return List<Map<String, dynamic>>.from(response.data);
     } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(
-        message: 'Failed to fetch participants: ${e.toString()}',
-        statusCode: null,
-        type: ApiExceptionType.unknown,
-      );
+      throw _handleRepoError(e, 'Failed to fetch participants');
     }
   }
 
@@ -285,7 +279,7 @@ class EventRepository {
   /// Get event mode configuration using the NEW flutter eventmode endpoint
   Future<EventMode> getEventMode(String eventId, EventModeType type) async {
     try {
-      final modeSlug = type.name.toLowerCase();
+      final modeSlug = type.slug;
       print('🌐 API REQUEST: GET /api/flutter/eventmode/$modeSlug?eventId=$eventId');
       final response = await _apiClient.get(
         '/api/flutter/eventmode/$modeSlug',
@@ -303,12 +297,7 @@ class EventRepository {
 
       return EventMode.fromJson(response.data as Map<String, dynamic>);
     } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(
-        message: 'Failed to fetch event mode: ${e.toString()}',
-        statusCode: null,
-        type: ApiExceptionType.unknown,
-      );
+      throw _handleRepoError(e, 'Failed to fetch event mode');
     }
   }
 

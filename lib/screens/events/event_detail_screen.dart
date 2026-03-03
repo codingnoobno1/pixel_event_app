@@ -59,17 +59,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     try {
       final repository = ref.read(eventRepositoryProvider);
       
-      // 1. Get registrations for the user
-      final registrations = await repository.getMyRegistrations(user.email);
-      
-      // 2. Find the one for this event
-      final registration = registrations.firstWhere(
-        (r) => r.eventId == widget.event.id,
-        orElse: () => throw Exception("Registration not found"),
-      );
-
-      // 3. Fetch the full Event Pass object
-      final pass = await repository.getEventPass(registration.id);
+      // Fetch the full Event Pass object using email and eventId
+      // as per the new flutter-specific pass endpoint
+      final pass = await repository.getEventPass(user.email, widget.event.id);
 
       if (mounted) {
         Navigator.push(

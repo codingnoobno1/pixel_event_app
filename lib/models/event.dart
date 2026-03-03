@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'event_mode.dart';
 
 /// Event model representing an event
 class Event {
@@ -15,6 +16,8 @@ class Event {
   final int participantCount;
   final DateTime? scanWindowStart;
   final DateTime? scanWindowEnd;
+  final String? activeMode;
+  final List<EventMode>? modes;
 
   const Event({
     required this.id,
@@ -30,6 +33,8 @@ class Event {
     this.participantCount = 0,
     this.scanWindowStart,
     this.scanWindowEnd,
+    this.activeMode,
+    this.modes,
   });
 
   /// Check if event is upcoming (date is in the future)
@@ -50,12 +55,12 @@ class Event {
   /// Create Event from JSON
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
-      id: json['_id'] as String? ?? json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      date: DateTime.parse(json['date'] as String),
-      time: json['time'] as String,
-      location: json['location'] as String,
+      id: json['_id'] as String? ?? json['id'] as String? ?? '',
+      title: json['title'] as String? ?? 'Untitled Event',
+      description: json['description'] as String? ?? '',
+      date: json['date'] != null ? DateTime.parse(json['date'] as String) : DateTime.now(),
+      time: json['time'] as String? ?? '00:00',
+      location: json['location'] as String? ?? 'TBA',
       imageUrl: json['imageUrl'] as String?,
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       onDuty: json['onDuty'] as bool? ?? false,
@@ -69,6 +74,10 @@ class Event {
       scanWindowEnd: json['scanWindowEnd'] != null
           ? DateTime.parse(json['scanWindowEnd'] as String)
           : null,
+      activeMode: json['activeMode'] as String?,
+      modes: (json['modes'] as List<dynamic>?)
+          ?.map((e) => EventMode.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -88,6 +97,8 @@ class Event {
       'participantCount': participantCount,
       'scanWindowStart': scanWindowStart?.toIso8601String(),
       'scanWindowEnd': scanWindowEnd?.toIso8601String(),
+      'activeMode': activeMode,
+      'modes': modes?.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -106,6 +117,8 @@ class Event {
     int? participantCount,
     DateTime? scanWindowStart,
     DateTime? scanWindowEnd,
+    String? activeMode,
+    List<EventMode>? modes,
   }) {
     return Event(
       id: id ?? this.id,
@@ -121,6 +134,8 @@ class Event {
       participantCount: participantCount ?? this.participantCount,
       scanWindowStart: scanWindowStart ?? this.scanWindowStart,
       scanWindowEnd: scanWindowEnd ?? this.scanWindowEnd,
+      activeMode: activeMode ?? this.activeMode,
+      modes: modes ?? this.modes,
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/models.dart';
 import '../../widgets/widgets.dart';
+import '../../providers/providers.dart';
 
 class EventLobbyScreen extends ConsumerStatefulWidget {
   final Event event;
@@ -19,6 +20,31 @@ class EventLobbyScreen extends ConsumerStatefulWidget {
 }
 
 class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
+  late Event _currentEvent;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentEvent = widget.event;
+    _refreshEvent();
+  }
+
+  Future<void> _refreshEvent() async {
+    setState(() => _isLoading = true);
+    try {
+      final repo = ref.read(eventRepositoryProvider);
+      final updatedEvent = await repo.getEventById(widget.event.id);
+      setState(() {
+        _currentEvent = updatedEvent;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      // Fallback to widget event if refresh fails
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFF0B0B0F);
@@ -31,9 +57,15 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          widget.event.title.toUpperCase(),
+          _currentEvent.title.toUpperCase(),
           style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2, fontSize: 16),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(_isLoading ? Icons.sync : Icons.refresh, color: Colors.white70),
+            onPressed: _refreshEvent,
+          ),
+        ],
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -47,116 +79,121 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
             colors: [Color(0xFF0B0B0F), Color(0xFF15151F)],
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Event Banner Status
-              CyberGlassCard(
-                child: Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: cyan.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: const Icon(Icons.hub_outlined, color: cyan, size: 30),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "EVENT STATUS",
-                            style: TextStyle(color: cyan, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1),
-                          ),
-                          const Text(
-                            "LIVE IN PROGRESS",
-                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                    CyberBadge(label: "LIVE", color: pink, type: CyberBadgeType.glow),
-                  ],
-                ),
-              ).animate().fadeIn().slideY(begin: 0.1, end: 0),
-
-              const SizedBox(height: 40),
-
-              const Text(
-                "SELECT EVENT MODE",
-                style: TextStyle(color: Colors.white60, fontWeight: FontWeight.bold, letterSpacing: 2, fontSize: 12),
-              ),
-              const SizedBox(height: 20),
-
-              // Dynamic Modes Grid
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                children: [
-                  _modeCard(
-                    Icons.quiz_outlined, 
-                    "QUIZ ZONE", 
-                    "Rapid fire & more", 
-                    pink,
-                    () => Navigator.pushNamed(context, '/quiz-mode', arguments: widget.event),
-                    active: widget.event.activeMode == 'quiz'
-                  ),
-                  _modeCard(
-                    Icons.how_to_vote_outlined, 
-                    "VOTING", 
-                    "Make your voice count", 
-                    cyan,
-                    () => Navigator.pushNamed(context, '/voting-mode', arguments: widget.event),
-                    active: widget.event.activeMode == 'voting'
-                  ),
-                  _modeCard(
-                    Icons.explore_outlined, 
-                    "TREASURE HUNT", 
-                    "Find the hidden codes", 
-                    Colors.amber,
-                    () => Navigator.pushNamed(context, '/treasure-hunt', arguments: widget.event),
-                    active: widget.event.activeMode == 'treasure-hunt'
-                  ),
-                  _modeCard(
-                    Icons.more_horiz_outlined, 
-                    "MORE", 
-                    "Explore activities", 
-                    Colors.grey,
-                    () {},
-                    active: false
-                  ),
-                ],
-              ).animate().fadeIn(delay: 300.ms),
-
-              const SizedBox(height: 40),
-
-              // Current Activity Callout
-              if (widget.event.activeMode != null)
-                CyberCard(
-                  color: pink.withOpacity(0.2),
+        child: RefreshIndicator(
+          onRefresh: _refreshEvent,
+          color: pink,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Event Banner Status
+                CyberGlassCard(
                   child: Row(
                     children: [
-                      const Icon(Icons.bolt, color: pink),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Text(
-                          "Active mode is currently set to your selection. Join now for maximum points!",
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: cyan.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(Icons.hub_outlined, color: cyan, size: 30),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "EVENT STATUS",
+                              style: TextStyle(color: cyan, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1),
+                            ),
+                            Text(
+                              _currentEvent.activeMode != null ? "ACTIVE: ${_currentEvent.activeMode!.toUpperCase()}" : "LIVE IN PROGRESS",
+                              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                       ),
+                      CyberBadge(label: "LIVE", color: pink, type: CyberBadgeType.glow),
                     ],
                   ),
-                ).animate().fadeIn(delay: 600.ms),
-            ],
+                ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+
+                const SizedBox(height: 40),
+
+                const Text(
+                  "SELECT EVENT MODE",
+                  style: TextStyle(color: Colors.white60, fontWeight: FontWeight.bold, letterSpacing: 2, fontSize: 12),
+                ),
+                const SizedBox(height: 20),
+
+                // Dynamic Modes Grid
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 20,
+                  children: [
+                    _modeCard(
+                      Icons.quiz_outlined, 
+                      "QUIZ ZONE", 
+                      "Rapid fire & more", 
+                      pink,
+                      () => Navigator.pushNamed(context, '/quiz-mode', arguments: _currentEvent),
+                      active: _currentEvent.activeMode == 'quiz'
+                    ),
+                    _modeCard(
+                      Icons.how_to_vote_outlined, 
+                      "VOTING", 
+                      "Make your voice count", 
+                      cyan,
+                      () => Navigator.pushNamed(context, '/voting-mode', arguments: _currentEvent),
+                      active: _currentEvent.activeMode == 'voting'
+                    ),
+                    _modeCard(
+                      Icons.explore_outlined, 
+                      "TREASURE HUNT", 
+                      "Find the hidden codes", 
+                      Colors.amber,
+                      () => Navigator.pushNamed(context, '/treasure-hunt', arguments: _currentEvent),
+                      active: _currentEvent.activeMode == 'treasure-hunt'
+                    ),
+                    _modeCard(
+                      Icons.more_horiz_outlined, 
+                      "MORE", 
+                      "Explore activities", 
+                      Colors.grey,
+                      () {},
+                      active: false
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 300.ms),
+
+                const SizedBox(height: 40),
+
+                // Current Activity Callout
+                if (_currentEvent.activeMode != null)
+                  CyberCard(
+                    color: pink.withOpacity(0.2),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.bolt, color: pink),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            "The ${_currentEvent.activeMode} mode is currently live! Join now for participation points.",
+                            style: const TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(delay: 600.ms),
+              ],
+            ),
           ),
         ),
       ),
