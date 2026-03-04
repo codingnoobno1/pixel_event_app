@@ -20,12 +20,16 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-check authentication and find event whenever dependencies change
     _findActiveEvent();
   }
 
   Future<void> _findActiveEvent() async {
+    // Prevent multiple simultaneous scans
+    if (_isLoading && _activeEvent != null) return;
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -34,11 +38,15 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
     try {
       final repo = ref.read(eventRepositoryProvider);
       
-      // 1. Get real user email from provider
+      // 1. Wait for valid user (avoiding the initialization race)
       final userAsync = ref.read(currentUserProvider);
       final user = userAsync.value;
       
       if (user == null) {
+        if (userAsync.isLoading) {
+           // Still loading user, don't set error yet
+           return;
+        }
         setState(() {
           _error = "User not authenticated";
           _isLoading = false;
@@ -50,6 +58,7 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
 
       // 2. Get registrations
       final registrations = await repo.getMyRegistrations(email);
+      print('🔍 DEBUG: Found ${registrations.length} registrations for $email');
       
       if (registrations.isEmpty) {
         setState(() {
@@ -61,16 +70,24 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
 
       // 3. Find event with activeMode
       for (var reg in registrations) {
-        final event = await repo.getEventById(reg.eventId);
-        if (event.activeMode != null) {
-          // Found an active event mode!
-          final pass = await repo.getEventPass(email, event.id);
-          setState(() {
-            _activeEvent = event;
-            _activePass = pass;
-            _isLoading = false;
-          });
-          return;
+        print('🔍 DEBUG: Checking Event ID: ${reg.eventId}');
+        try {
+          final event = await repo.getEventById(reg.eventId);
+          print('🔍 DEBUG: Event "${event.title}" mode: ${event.activeMode}');
+          
+          if (event.activeMode != null) {
+            final pass = await repo.getEventPass(email, event.id);
+            setState(() {
+              _activeEvent = event;
+              _activePass = pass;
+              _isLoading = false;
+            });
+            return;
+          }
+        } catch (e) {
+          print('⚠️ DEBUG: Failed to fetch event ${reg.eventId}: $e');
+          // Skip missing/broken events instead of crashing the whole scan
+          continue;
         }
       }
 
@@ -79,6 +96,7 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
         _isLoading = false;
       });
     } catch (e) {
+      print('❌ DEBUG: Scan failed globally: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;

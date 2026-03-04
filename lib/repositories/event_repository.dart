@@ -56,7 +56,11 @@ class EventRepository {
   }
 
   ApiException _handleRepoError(Object e, String prefix) {
-    if (e is ApiException) return e;
+    if (e is ApiException) {
+      print('❌ REPO ERROR [$prefix]: ${e.message} (Status: ${e.statusCode})');
+      return e;
+    }
+    print('❌ REPO UNKNOWN ERROR [$prefix]: $e');
     return ApiException(
       message: '$prefix: ${e.toString()}',
       statusCode: null,
@@ -64,10 +68,12 @@ class EventRepository {
     );
   }
 
-  /// Get event by ID
   Future<Event> getEventById(String eventId) async {
     try {
-      final response = await _apiClient.get('/api/events/$eventId');
+      final url = '/api/events/$eventId';
+      print('🌐 API REQUEST: GET $url');
+      final response = await _apiClient.get(url);
+      print('🌐 API RESPONSE: Status ${response.statusCode}');
 
       // Validate response
       if (response.data is! Map) {
@@ -80,6 +86,7 @@ class EventRepository {
 
       return Event.fromJson(response.data as Map<String, dynamic>);
     } catch (e) {
+      print('❌ ERROR: getEventById($eventId) failed: $e');
       throw _handleRepoError(e, 'Failed to fetch event');
     }
   }
@@ -244,16 +251,14 @@ class EventRepository {
     }
   }
 
-  /// Get event pass for a user and event using the NEW flutter pass endpoint
   Future<EventPass> getEventPass(String email, String eventId) async {
     try {
-      print('🌐 API REQUEST: GET /api/flutter/pass?email=$email&eventId=$eventId');
+      final url = '/api/flutter/pass';
+      final queryParams = {'email': email, 'eventId': eventId};
+      print('🌐 API REQUEST: GET $url with params: $queryParams');
       final response = await _apiClient.get(
-        '/api/flutter/pass',
-        queryParameters: {
-          'email': email,
-          'eventId': eventId,
-        },
+        url,
+        queryParameters: queryParams,
       );
       print('🌐 API RESPONSE: Status ${response.statusCode}');
 
@@ -267,12 +272,8 @@ class EventRepository {
 
       return EventPass.fromJson(response.data as Map<String, dynamic>);
     } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(
-        message: 'Failed to fetch event pass: ${e.toString()}',
-        statusCode: null,
-        type: ApiExceptionType.unknown,
-      );
+      print('❌ ERROR: getEventPass($email, $eventId) failed: $e');
+      throw _handleRepoError(e, 'Failed to fetch event pass');
     }
   }
 

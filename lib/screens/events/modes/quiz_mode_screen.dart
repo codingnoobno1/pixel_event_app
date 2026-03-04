@@ -31,11 +31,27 @@ class _QuizModeScreenState extends ConsumerState<QuizModeScreen> {
     try {
       final repo = ref.read(eventRepositoryProvider);
       final modeData = await repo.getEventMode(widget.event.id, EventModeType.quiz);
+      
+      final String? quizId = modeData.config['quizId'];
+      final int? timeLimit = modeData.config['timeLimit'];
+
       setState(() {
-        _subModes = modeData.config['subModes'] ?? [
-          {'id': 'rapid-fire', 'name': 'RAPID FIRE', 'description': '10 seconds per question. Think fast!', 'icon': 'bolt'},
-          {'id': 'long-thinking', 'name': 'DEEP DIVE', 'description': 'Complex scenarios. Depth matters.', 'icon': 'psychology'},
-        ];
+        if (quizId != null) {
+          _subModes = [
+            {
+              'id': 'live-quiz', 
+              'name': 'OFFICIAL EVENT QUIZ', 
+              'description': 'Time limit: ${timeLimit ?? 30} seconds per question.', 
+              'icon': 'stars',
+              'quizId': quizId
+            },
+          ];
+        } else {
+          _subModes = [
+            {'id': 'rapid-fire', 'name': 'RAPID FIRE', 'description': '10 seconds per question. Think fast!', 'icon': 'bolt'},
+            {'id': 'long-thinking', 'name': 'DEEP DIVE', 'description': 'Complex scenarios. Depth matters.', 'icon': 'psychology'},
+          ];
+        }
         _isLoading = false;
       });
     } catch (e) {

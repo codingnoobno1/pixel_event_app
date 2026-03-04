@@ -37,9 +37,19 @@ class _VotingModeScreenState extends ConsumerState<VotingModeScreen> {
     try {
       final repo = ref.read(eventRepositoryProvider);
       final modeData = await repo.getEventMode(widget.event.id, EventModeType.voting);
+      
+      final List<dynamic>? topics = modeData.config['topics'];
+      
       setState(() {
-        _topic = modeData.config['topic'] ?? _topic;
-        _options = modeData.config['options'] ?? _options;
+        if (topics != null && topics.isNotEmpty) {
+          _topic = "LIVE POLL: ${widget.event.title}";
+          _options = topics.map((t) => {
+            'id': t.toString().toLowerCase().replaceAll(' ', '_'),
+            'label': t.toString().toUpperCase(),
+            'desc': 'Cast your vote for this option',
+            'icon': 'how_to_vote'
+          }).toList();
+        }
         _isLoading = false;
       });
     } catch (e) {
