@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CyberTextField extends StatelessWidget {
   final TextEditingController? controller;
@@ -26,35 +27,49 @@ class CyberTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const pink = Color(0xFFFF2E88);
-    const cardColor = Color(0xFF15151F);
+    const cyan = Color(0xFF00FFFF);
+    const bg = Color(0xFF0B0B0F);
 
     return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: pink.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
+      margin: const EdgeInsets.only(bottom: 8),
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         validator: validator,
         onChanged: onChanged,
-        style: const TextStyle(color: Colors.white, fontSize: 16),
+        style: GoogleFonts.jetBrainsMono(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
-          labelText: labelText,
+          labelText: labelText?.toUpperCase(),
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-          labelStyle: TextStyle(color: pink.withOpacity(0.7)),
-          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: pink) : null,
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
+          labelStyle: GoogleFonts.jetBrainsMono(
+            color: cyan.withOpacity(0.5),
+            fontSize: 12,
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: cyan, size: 20) : null,
           suffixIcon: suffixIcon,
-          border: InputBorder.none,
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.03),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: cyan.withOpacity(0.1)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: cyan, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+          ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
         ),
       ),
     );

@@ -1,25 +1,29 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/models.dart';
+import '../../providers/service_providers.dart';
+import '../../widgets/widgets.dart';
 
-class EventLobbyScreen extends StatefulWidget {
+class EventLobbyScreen extends ConsumerStatefulWidget {
   final Event event;
+  final EventPass pass;
 
   const EventLobbyScreen({
     super.key,
     required this.event,
+    required this.pass,
   });
 
   @override
-  State<EventLobbyScreen> createState() => _EventLobbyScreenState();
+  ConsumerState<EventLobbyScreen> createState() => _EventLobbyScreenState();
 }
 
-class _EventLobbyScreenState extends State<EventLobbyScreen>
+class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = false;
   List<Registration> _participants = [];
-  List<EventMessage> _messages = [];
+  Map<String, dynamic>? _depthData;
 
   @override
   void initState() {
@@ -36,21 +40,22 @@ class _EventLobbyScreenState extends State<EventLobbyScreen>
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
+    if (!mounted) return;
+    setState(() => _isLoading = true);
 
     try {
-      // TODO: Load participants and messages
-      await Future.delayed(const Duration(seconds: 1));
+      final engineService = ref.read(eventEngineServiceProvider);
+      final depth = await engineService.getEventDepth(widget.event.id);
+      
+      if (!mounted) return;
       setState(() {
-        _participants = [];
-        _messages = [];
-      });
-    } finally {
-      setState(() {
+        _depthData = depth;
         _isLoading = false;
       });
+    } catch (e) {
+      print('Error loading depth: $e');
+      if (!mounted) return;
+      setState(() => _isLoading = false);
     }
   }
 
@@ -61,90 +66,175 @@ class _EventLobbyScreenState extends State<EventLobbyScreen>
 
   @override
   Widget build(BuildContext context) {
-    final totalCount = _participants.length;
-    final attendedCount =
-        _participants.where((p) => p.status == AttendanceStatus.attended).length;
-    final pendingCount =
-        _participants.where((p) => p.status == AttendanceStatus.pending).length;
+    final pink = Color(0xFFFF2E88);
+    final cyan = Color(0xFF00D2FF);
 
     return Scaffold(
+      backgroundColor: Color(0xFF0B0B0F),
       appBar: AppBar(
-        title: const Text('Event Lobby'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text('LIVE LOBBY', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, color: cyan),
             onPressed: _loadData,
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Participants', icon: Icon(Icons.people)),
-            Tab(text: 'Messages', icon: Icon(Icons.message)),
-          ],
-        ),
       ),
-      body: Column(
-        children: [
-          // Event Info
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            color: Theme.of(context).colorScheme.primaryContainer,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.event.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${DateFormat('MMM d, y').format(widget.event.date)} • ${widget.event.time}',
-                ),
-                const SizedBox(height: 4),
-                Text(widget.event.location),
-              ],
+      body: CustomScrollView(
+        slivers: [
+          // Event Header
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.event.title.toUpperCase(),
+                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, color: pink, size: 16),
+                      const SizedBox(width: 4),
+                      Text(widget.event.location, style: TextStyle(color: Colors.white70)),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
 
-          // Statistics
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildStatCard('Total', '$totalCount', Colors.blue),
-                _buildStatCard('Attended', '$attendedCount', Colors.green),
-                _buildStatCard('Pending', '$pendingCount', Colors.orange),
-              ],
+          // Depth / Engagement Cards
+          if (_depthData != null) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  "ACTIVE CHALLENGES",
+                  style: TextStyle(color: pink, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 12),
+                ),
+              ),
             ),
-          ),
+            SliverPadding(
+              padding: const EdgeInsets.all(24),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  ...(_depthData!['quizzes'] as List).map((q) => _buildDepthCard(
+                    title: q['title'],
+                    subtitle: "${q['questionCount']} Questions • ${q['type']}",
+                    count: "${q['participantCount']}",
+                    countLabel: "SOLVED",
+                    color: cyan,
+                    recentUsers: (q['recentParticipants'] as List?)?.cast<String>(),
+                  )),
+                  ...(_depthData!['hunts'] as List).map((h) => _buildDepthCard(
+                    title: h['name'],
+                    subtitle: "${h['clueCount']} Clues found in the wild",
+                    count: "${h['activeCount']}",
+                    countLabel: "HUNTERS",
+                    color: Colors.orangeAccent,
+                    recentUsers: (h['recentParticipants'] as List?)?.cast<String>(),
+                  )),
+                ]),
+              ),
+            ),
+          ],
 
-          const Divider(height: 1),
-
-          // Tab Content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildParticipantsTab(),
-                _buildMessagesTab(),
-              ],
+          // Tabs for Participants
+          SliverToBoxAdapter(
+            child: Container(
+              height: 400, // Fixed height for tab content in scroll view or use nested
+              child: Column(
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    indicatorColor: pink,
+                    labelColor: pink,
+                    unselectedLabelColor: Colors.white38,
+                    tabs: const [
+                      Tab(text: "PARTICIPANTS"),
+                      Tab(text: "RECENT UPDATES"),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildParticipantsTab(),
+                        Center(child: Text("Real-time updates appearing here...", style: TextStyle(color: Colors.white30))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
-      floatingActionButton: _tabController.index == 1
-          ? FloatingActionButton.extended(
-              onPressed: _showSendMessageDialog,
-              icon: const Icon(Icons.send),
-              label: const Text('Send Message'),
-            )
-          : null,
     );
+  }
+
+  Widget _buildDepthCard({
+    required String title,
+    required String subtitle,
+    required String count,
+    required String countLabel,
+    required Color color,
+    List<String>? recentUsers,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 4),
+                    Text(subtitle, style: TextStyle(color: Colors.white38, fontSize: 12)),
+                  ],
+                ),
+              ),
+              Column(
+                children: [
+                  Text(count, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.w900)),
+                  Text(countLabel, style: TextStyle(color: color.withOpacity(0.5), fontSize: 8, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ],
+          ),
+          if (recentUsers != null && recentUsers.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text("RECENT: ", style: TextStyle(color: color.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: Text(
+                    recentUsers.join(", "),
+                    style: TextStyle(color: Colors.white60, fontSize: 10),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    ).animate().fadeIn().slideX(begin: 0.1, end: 0);
   }
 
   Widget _buildStatCard(String label, String value, Color color) {

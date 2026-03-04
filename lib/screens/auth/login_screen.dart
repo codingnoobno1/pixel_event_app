@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/providers.dart';
 import '../../widgets/widgets.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -105,17 +106,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFF0B0B0F);
-    const pink = Color(0xFFFF2E88);
+    const cyan = Color(0xFF00FFFF);
 
     return Scaffold(
       backgroundColor: bg,
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0B0B0F), Color(0xFF15151F)],
-          ),
+          color: bg,
         ),
         child: SafeArea(
           child: Center(
@@ -124,32 +121,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
               child: Column(
                 children: [
                   // Logo & Header
-                  const Icon(Icons.bolt_rounded, size: 60, color: pink)
-                      .animate().scale(duration: 600.ms, curve: Curves.elasticOut),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'PIXEL EVENTS',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2),
+                  Container(
+                    height: 80,
+                    width: 80,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: cyan, blurRadius: 40, spreadRadius: -20),
+                      ],
+                    ),
+                    child: const Center(child: Icon(Icons.security_rounded, size: 50, color: cyan)),
+                  ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+                  const SizedBox(height: 16),
+                  Text(
+                    'PIXEL_EVENT_VAULT',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 4,
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
+                  Text(
+                    'AUTHENTICATION_REQUIRED',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10,
+                      color: cyan.withOpacity(0.5),
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
 
                   // Tabs
                   Container(
                     height: 50,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF15151F),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: pink.withOpacity(0.1)),
+                      color: Colors.white.withOpacity(0.03),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: cyan.withOpacity(0.1)),
                     ),
                     child: TabBar(
                       controller: _tabController,
                       indicator: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: pink.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        color: cyan.withOpacity(0.1),
                       ),
                       dividerColor: Colors.transparent,
-                      labelColor: pink,
-                      unselectedLabelColor: Colors.white54,
+                      labelColor: cyan,
+                      unselectedLabelColor: Colors.white24,
+                      labelStyle: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.bold, fontSize: 12),
+                      unselectedLabelStyle: GoogleFonts.jetBrainsMono(fontSize: 12),
                       indicatorSize: TabBarIndicatorSize.tab,
                       tabs: const [
                         Tab(text: "LOGIN"),
@@ -199,7 +221,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
               prefixIcon: Icons.lock_outline,
               obscureText: _obscurePassword,
               suffixIcon: IconButton(
-                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: const Color(0xFFFF2E88).withOpacity(0.5)),
+                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: const Color(0xFF00FFFF).withOpacity(0.5)),
                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
               ),
               validator: (v) => v!.isEmpty ? 'Required' : null,
@@ -207,7 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
             const Spacer(),
             CyberButton(
               onPressed: _handleLogin,
-              text: "Sign In",
+              text: "INITIATE_SESSION",
               isLoading: _isLoading,
             ),
             const SizedBox(height: 20),

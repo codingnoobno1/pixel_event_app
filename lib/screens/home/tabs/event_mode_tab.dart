@@ -30,6 +30,7 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
     // Prevent multiple simultaneous scans
     if (_isLoading && _activeEvent != null) return;
 
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -47,6 +48,7 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
            // Still loading user, don't set error yet
            return;
         }
+        if (!mounted) return;
         setState(() {
           _error = "User not authenticated";
           _isLoading = false;
@@ -61,6 +63,7 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
       print('🔍 DEBUG: Found ${registrations.length} registrations for $email');
       
       if (registrations.isEmpty) {
+        if (!mounted) return;
         setState(() {
           _activeEvent = null;
           _isLoading = false;
@@ -77,6 +80,7 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
           
           if (event.activeMode != null) {
             final pass = await repo.getEventPass(email, event.id);
+            if (!mounted) return;
             setState(() {
               _activeEvent = event;
               _activePass = pass;
@@ -91,12 +95,14 @@ class _EventModeTabState extends ConsumerState<EventModeTab> {
         }
       }
 
+      if (!mounted) return;
       setState(() {
         _activeEvent = null;
         _isLoading = false;
       });
     } catch (e) {
       print('❌ DEBUG: Scan failed globally: $e');
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;

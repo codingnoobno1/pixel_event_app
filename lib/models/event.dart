@@ -16,8 +16,8 @@ class Event {
   final int participantCount;
   final DateTime? scanWindowStart;
   final DateTime? scanWindowEnd;
-  final String? activeMode; // For backward compatibility
   final String? activeModeType;
+  final String? activeModeQuizId;
   final DateTime? activeModeStartedAt;
   final List<EventMode>? modes;
 
@@ -35,8 +35,8 @@ class Event {
     this.participantCount = 0,
     this.scanWindowStart,
     this.scanWindowEnd,
-    this.activeMode,
     this.activeModeType,
+    this.activeModeQuizId,
     this.activeModeStartedAt,
     this.modes,
   });
@@ -54,6 +54,18 @@ class Event {
         scanWindowEnd != null &&
         now.isAfter(scanWindowStart!) &&
         now.isBefore(scanWindowEnd!);
+  }
+
+  /// Get the active mode as a map
+  Map<String, dynamic>? get activeMode {
+    if (activeModeType != null) {
+      return {
+        'type': activeModeType,
+        'quizId': activeModeQuizId,
+        'startedAt': activeModeStartedAt?.toIso8601String(),
+      };
+    }
+    return null;
   }
 
   /// Create Event from JSON
@@ -78,8 +90,8 @@ class Event {
       scanWindowEnd: json['scanWindowEnd'] != null
           ? DateTime.parse(json['scanWindowEnd'] as String)
           : null,
-      activeMode: json['activeMode'] is String ? json['activeMode'] as String : (json['activeMode'] as Map<String, dynamic>?)?['type'] as String?,
       activeModeType: json['activeMode'] is Map ? (json['activeMode'] as Map<String, dynamic>)['type'] as String? : (json['activeMode'] as String?),
+      activeModeQuizId: json['activeMode'] is Map ? (json['activeMode'] as Map<String, dynamic>)['quizId'] as String? : null,
       activeModeStartedAt: json['activeMode'] is Map && (json['activeMode'] as Map)['startedAt'] != null
           ? DateTime.parse((json['activeMode'] as Map<String, dynamic>)['startedAt'] as String)
           : null,
@@ -107,8 +119,9 @@ class Event {
       'scanWindowEnd': scanWindowEnd?.toIso8601String(),
       'activeMode': activeModeType != null ? {
         'type': activeModeType,
+        'quizId': activeModeQuizId,
         'startedAt': activeModeStartedAt?.toIso8601String(),
-      } : activeMode,
+      } : null,
       'modes': modes?.map((e) => e.toJson()).toList(),
     };
   }
@@ -128,7 +141,9 @@ class Event {
     int? participantCount,
     DateTime? scanWindowStart,
     DateTime? scanWindowEnd,
-    String? activeMode,
+    String? activeModeType,
+    String? activeModeQuizId,
+    DateTime? activeModeStartedAt,
     List<EventMode>? modes,
   }) {
     return Event(
@@ -145,7 +160,9 @@ class Event {
       participantCount: participantCount ?? this.participantCount,
       scanWindowStart: scanWindowStart ?? this.scanWindowStart,
       scanWindowEnd: scanWindowEnd ?? this.scanWindowEnd,
-      activeMode: activeMode ?? this.activeMode,
+      activeModeType: activeModeType ?? this.activeModeType,
+      activeModeQuizId: activeModeQuizId ?? this.activeModeQuizId,
+      activeModeStartedAt: activeModeStartedAt ?? this.activeModeStartedAt,
       modes: modes ?? this.modes,
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 enum CyberBadgeType { filled, outline, glow }
 
@@ -18,8 +19,8 @@ class CyberBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const pink = Color(0xFFFF2E88);
-    final accentColor = color ?? pink;
+    const cyan = Color(0xFF00FFFF);
+    final accentColor = color ?? cyan;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -27,17 +28,17 @@ class CyberBadge extends StatelessWidget {
         color: type == CyberBadgeType.filled
             ? accentColor
             : type == CyberBadgeType.glow
-                ? accentColor.withOpacity(0.15)
+                ? accentColor.withOpacity(0.1)
                 : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         border: type != CyberBadgeType.filled
-            ? Border.all(color: accentColor, width: 1)
+            ? Border.all(color: accentColor.withOpacity(0.5), width: 1)
             : null,
         boxShadow: type == CyberBadgeType.glow
             ? [
                 BoxShadow(
-                  color: accentColor.withOpacity(0.5),
-                  blurRadius: 8,
+                  color: accentColor.withOpacity(0.2),
+                  blurRadius: 10,
                   spreadRadius: 0,
                 )
               ]
@@ -49,17 +50,17 @@ class CyberBadge extends StatelessWidget {
           if (icon != null) ...[
             Icon(
               icon,
-              size: 12,
-              color: type == CyberBadgeType.filled ? Colors.white : accentColor,
+              size: 10,
+              color: type == CyberBadgeType.filled ? Colors.black : accentColor,
             ),
             const SizedBox(width: 4),
           ],
           Text(
             label.toUpperCase(),
-            style: TextStyle(
-              color: type == CyberBadgeType.filled ? Colors.white : accentColor,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
+            style: GoogleFonts.jetBrainsMono(
+              color: type == CyberBadgeType.filled ? Colors.black : accentColor,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
               letterSpacing: 1.0,
             ),
           ),

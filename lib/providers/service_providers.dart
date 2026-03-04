@@ -72,3 +72,8 @@ final messageServiceProvider = Provider<MessageService>((ref) {
   
   return messageService;
 });
+// Event Engine Service Provider
+final eventEngineServiceProvider = Provider<EventEngineService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return EventEngineService(apiClient);
+});

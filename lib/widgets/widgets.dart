@@ -14,3 +14,4 @@ export 'cyber_avatar.dart';
 export 'cyber_glass_card.dart';
 export 'cyber_badge.dart';
 export 'cyber_loading.dart';
+export 'cyber_dialog.dart';

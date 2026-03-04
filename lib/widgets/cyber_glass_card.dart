@@ -17,8 +17,8 @@ class CyberGlassCard extends StatelessWidget {
     required this.child,
     this.width,
     this.height,
-    this.blur = 10.0,
-    this.opacity = 0.1,
+    this.blur = 20.0,
+    this.opacity = 0.05,
     this.padding,
     this.borderRadius,
     this.color,
@@ -27,29 +27,47 @@ class CyberGlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const pink = Color(0xFFFF2E88);
-    final accentColor = color ?? pink;
+    const cyan = Color(0xFF00FFFF);
+    final accentColor = color ?? cyan;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: borderRadius ?? BorderRadius.circular(20),
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.05),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
       child: ClipRRect(
-        borderRadius: borderRadius ?? BorderRadius.circular(20),
+        borderRadius: borderRadius ?? BorderRadius.circular(16),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            width: width,
-            height: height,
-            padding: padding ?? const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(opacity),
-              borderRadius: borderRadius ?? BorderRadius.circular(20),
-              border: Border.all(
-                color: accentColor.withOpacity(0.2),
-                width: 1.5,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              width: width,
+              height: height,
+              padding: padding ?? const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(opacity),
+                borderRadius: borderRadius ?? BorderRadius.circular(16),
+                border: Border.all(
+                  color: accentColor.withOpacity(0.2),
+                  width: 1,
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.1),
+                    Colors.white.withOpacity(0.0),
+                  ],
+                ),
               ),
+              child: child,
             ),
-            child: child,
           ),
         ),
       ),

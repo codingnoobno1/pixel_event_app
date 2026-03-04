@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'cyber_card.dart';
 
 /// Cyber-themed QR code widget
@@ -17,24 +18,24 @@ class QRCodeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const pink = Color(0xFFFF2E88);
+    const cyan = Color(0xFF00FFFF);
     
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white, // QR needs white background for best scanning
-            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: pink.withOpacity(0.3),
-                blurRadius: 20,
-                spreadRadius: 2,
+                color: cyan.withOpacity(0.3),
+                blurRadius: 15,
+                spreadRadius: 0,
               )
             ],
-            border: Border.all(color: pink.withOpacity(0.5), width: 2),
+            border: Border.all(color: cyan.withOpacity(0.5), width: 1.5),
           ),
           child: QrImageView(
             data: data,
@@ -49,10 +50,10 @@ class QRCodeWidget extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             label!.toUpperCase(),
-            style: const TextStyle(
+            style: GoogleFonts.jetBrainsMono(
               color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
               letterSpacing: 2,
             ),
             textAlign: TextAlign.center,
@@ -78,55 +79,64 @@ class CyberQRPass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const pink = Color(0xFFFF2E88);
+    const cyan = Color(0xFF00FFFF);
 
     return CyberCard(
-      color: pink,
+      color: cyan.withOpacity(0.1),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             title.toUpperCase(),
-            style: const TextStyle(
+            style: GoogleFonts.jetBrainsMono(
               color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
             ),
             textAlign: TextAlign.center,
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 8),
             Text(
-              subtitle!,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
-                fontSize: 14,
+              subtitle!.toUpperCase(),
+              style: GoogleFonts.jetBrainsMono(
+                color: cyan,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                letterSpacing: 1,
               ),
               textAlign: TextAlign.center,
             ),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           QRCodeWidget(
             data: data,
-            size: 200,
+            size: 180,
           ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.security, color: pink.withOpacity(0.7), size: 16),
-              const SizedBox(width: 8),
-              Text(
-                "ENCRYPTED PIXEL PASS",
-                style: TextStyle(
-                  color: pink.withOpacity(0.7),
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
+          const SizedBox(height: 32),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: cyan.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.security_rounded, color: cyan, size: 14),
+                const SizedBox(width: 8),
+                Text(
+                  "ENCRYPTED_PIXEL_PASS",
+                  style: GoogleFonts.jetBrainsMono(
+                    color: cyan.withOpacity(0.7),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

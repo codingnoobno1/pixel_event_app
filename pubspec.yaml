@@ -61,6 +61,9 @@ dependencies:
   # QR Code
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.2.0
+
+  # WebView (for external game activities)
+  webview_flutter: ^4.10.0
   
   # Excel Export
   excel: ^4.0.6

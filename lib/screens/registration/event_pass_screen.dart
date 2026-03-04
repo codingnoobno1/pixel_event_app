@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
 import '../../widgets/widgets.dart';
 
@@ -15,34 +16,30 @@ class EventPassScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFF0B0B0F);
-    const pink = Color(0xFFFF2E88);
-    const cyan = Color(0xFF00D2FF);
+    const cyan = Color(0xFF00FFFF);
+    const gold = Color(0xFFFFD700);
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          "DIGITAL PASS",
-          style: TextStyle(
+        title: Text(
+          "DIGITAL_PASS_VAULT",
+          style: GoogleFonts.jetBrainsMono(
             letterSpacing: 2,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            fontSize: 16,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0B0B0F), Color(0xFF15151F)],
-          ),
+          color: bg,
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -53,15 +50,16 @@ class EventPassScreen extends StatelessWidget {
                 data: eventPass.qrPayload,
                 title: eventPass.event.title,
                 subtitle: DateFormat('EEEE, MMM d, y').format(eventPass.event.date),
-              ).animate().fadeIn().scale(duration: 600.ms, curve: Curves.elasticOut),
+              ).animate().fadeIn().scale(duration: 600.ms, curve: Curves.elasticOut)
+               .shimmer(delay: 2.seconds, duration: 1500.ms),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 48),
 
               // INFO GRID
               Row(
                 children: [
-                  _buildPassInfo(Icons.access_time, eventPass.event.time, "START TIME"),
-                  _buildPassInfo(Icons.location_on_outlined, eventPass.event.location, "VENUE"),
+                  _buildPassInfo(Icons.access_time_rounded, eventPass.event.time, "START_TIME"),
+                  _buildPassInfo(Icons.location_on_rounded, eventPass.event.location, "ACCESS_POINT"),
                 ],
               ).animate().fadeIn(delay: 300.ms),
 
@@ -74,14 +72,14 @@ class EventPassScreen extends StatelessWidget {
                   children: [
                     _buildStatusItem(
                       "ENTRY", 
-                      eventPass.entryCount > 0 ? "RECORDED" : "PENDING", 
+                      eventPass.entryCount > 0 ? "CONFIRMED" : "PENDING", 
                       eventPass.entryCount > 0 ? const Color(0xFF00FF9F) : Colors.orange
                     ),
                     const VerticalDivider(color: Colors.white10, width: 1),
                     _buildStatusItem(
                       "EXIT", 
-                      eventPass.exitCount > 0 ? "RECORDED" : "PENDING", 
-                      eventPass.exitCount > 0 ? pink : Colors.grey
+                      eventPass.exitCount > 0 ? "CONFIRMED" : "PENDING", 
+                      eventPass.exitCount > 0 ? const Color(0xFFFF2E88) : Colors.white10
                     ),
                   ],
                 ),
@@ -90,31 +88,31 @@ class EventPassScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // ATTENDEE DETAILS
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "ATTENDEE DETAILS",
-                  style: TextStyle(
+                  "IDENTITY_METADATA",
+                  style: GoogleFonts.jetBrainsMono(
                     color: cyan,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                    fontSize: 12,
+                    letterSpacing: 2,
+                    fontSize: 10,
                   ),
                 ),
               ),
               const SizedBox(height: 16),
               
               CyberGlassCard(
+                opacity: 0.02,
                 child: Column(
                   children: [
                     _buildDetailRow("NAME", eventPass.user.name),
-                    _buildDetailRow("EMAIL", eventPass.user.email),
-                    _buildDetailRow("ENROLLMENT", eventPass.user.enrollmentNumber),
-                    _buildDetailRow("SEMESTER", "SEM ${eventPass.user.semester}"),
+                    _buildDetailRow("UID", eventPass.user.enrollmentNumber),
+                    _buildDetailRow("SECTOR", "SEM ${eventPass.user.semester} | ${eventPass.user.course}"),
                     if (eventPass.registrationType == RegistrationType.team) ...[
                       const Divider(color: Colors.white10, height: 24),
-                      _buildDetailRow("TEAM", eventPass.teamName ?? "N/A"),
-                      _buildDetailRow("TEAM ID", eventPass.teamId ?? "N/A"),
+                      _buildDetailRow("TACTICAL_UNIT", eventPass.teamName ?? "N/A"),
+                      _buildDetailRow("UNIT_ID", eventPass.teamId ?? "N/A"),
                     ],
                   ],
                 ),
@@ -124,17 +122,17 @@ class EventPassScreen extends StatelessWidget {
 
               // INSTRUCTIONS
               CyberCard(
-                color: cyan.withOpacity(0.3),
+                color: cyan.withOpacity(0.05),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.info_outline, color: cyan, size: 20),
+                        const Icon(Icons.terminal_rounded, color: cyan, size: 20),
                         const SizedBox(width: 12),
-                        const Text(
-                          "ENTRY INSTRUCTIONS",
-                          style: TextStyle(
+                        Text(
+                          "SYSTEM_PROTOCOLS",
+                          style: GoogleFonts.jetBrainsMono(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1,
@@ -202,21 +200,23 @@ class EventPassScreen extends StatelessWidget {
   }
 
   Widget _buildPassInfo(IconData icon, String value, String label) {
+    const cyan = Color(0xFF00FFFF);
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, color: const Color(0xFF00D2FF), size: 24),
-          const SizedBox(height: 8),
+          Icon(icon, color: cyan, size: 24),
+          const SizedBox(height: 12),
           Text(
-            value,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+            value.toUpperCase(),
+            style: GoogleFonts.jetBrainsMono(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          const SizedBox(height: 4),
           Text(
             label.toUpperCase(),
-            style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 9, letterSpacing: 1),
+            style: GoogleFonts.jetBrainsMono(color: Colors.white.withOpacity(0.3), fontSize: 9, letterSpacing: 1),
           ),
         ],
       ),
@@ -225,17 +225,17 @@ class EventPassScreen extends StatelessWidget {
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.bold),
+            style: GoogleFonts.jetBrainsMono(color: Colors.white.withOpacity(0.3), fontSize: 10, fontWeight: FontWeight.bold),
           ),
           Text(
             value.toUpperCase(),
-            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+            style: GoogleFonts.jetBrainsMono(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -243,28 +243,28 @@ class EventPassScreen extends StatelessWidget {
   }
 
   Widget _buildStep(String num, String text) {
-    const cyan = Color(0xFF00D2FF);
+    const cyan = Color(0xFF00FFFF);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 20,
-            height: 20,
+            width: 18,
+            height: 18,
             decoration: const BoxDecoration(color: cyan, shape: BoxShape.circle),
             child: Center(
               child: Text(
                 num,
-                style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w900),
               ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              text,
-              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+              text.toUpperCase(),
+              style: GoogleFonts.jetBrainsMono(color: Colors.white.withOpacity(0.5), fontSize: 10, height: 1.4),
             ),
           ),
         ],
@@ -277,12 +277,12 @@ class EventPassScreen extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+          style: GoogleFonts.jetBrainsMono(color: Colors.white.withOpacity(0.3), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           value,
-          style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold),
+          style: GoogleFonts.jetBrainsMono(color: color, fontSize: 13, fontWeight: FontWeight.w900),
         ),
       ],
     );

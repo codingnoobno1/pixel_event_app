@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/models.dart';
 import '../../providers/repository_providers.dart';
@@ -96,6 +97,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFF0B0B0F);
+    const cyan = Color(0xFF00FFFF);
     const pink = Color(0xFFFF2E88);
 
     return Scaffold(
@@ -122,12 +124,12 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                 const SizedBox(width: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF15151F),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: pink.withOpacity(0.2)),
+                    color: Colors.white.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: cyan.withOpacity(0.2)),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.filter_list, color: pink),
+                    icon: const Icon(Icons.filter_list_rounded, color: cyan),
                     onPressed: _showFilterDialog,
                   ),
                 ),
@@ -206,8 +208,8 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                         ),
                       )
                     : RefreshIndicator(
-                        color: pink,
-                        backgroundColor: const Color(0xFF15151F),
+                        color: cyan,
+                        backgroundColor: bg,
                         onRefresh: _loadEvents,
                         child: ListView.builder(
                           padding: const EdgeInsets.all(16),
@@ -245,7 +247,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
   }
 
   void _showFilterDialog() {
-    const pink = Color(0xFFFF2E88);
+    const cyan = Color(0xFF00FFFF);
     const bg = Color(0xFF0B0B0F);
 
     showModalBottomSheet(
@@ -279,8 +281,8 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                       return Theme(
                         data: Theme.of(context).copyWith(
                           colorScheme: ColorScheme.dark(
-                            primary: pink,
-                            onPrimary: Colors.white,
+                            primary: cyan,
+                            onPrimary: Colors.black,
                             surface: bg,
                             onSurface: Colors.white,
                           ),
@@ -299,7 +301,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                 },
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today, color: pink),
+                    const Icon(Icons.calendar_today_rounded, color: cyan),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -355,8 +357,8 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const pink = Color(0xFFFF2E88);
-    const cyan = Color(0xFF00D2FF);
+    const cyan = Color(0xFF00FFFF);
+    const gold = Color(0xFFFFD700);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -379,8 +381,8 @@ class EventCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
                             height: 160,
-                            color: Colors.white.withOpacity(0.05),
-                            child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: pink)),
+                            color: Colors.white.withOpacity(0.02),
+                            child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: cyan)),
                           ),
                           errorWidget: (context, url, error) => Container(
                             height: 160,
@@ -411,31 +413,31 @@ class EventCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                   Text(
                     event.title.toUpperCase(),
-                    style: const TextStyle(
+                    style: GoogleFonts.jetBrainsMono(
                       color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.1,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
                     ),
                   ),
                   const SizedBox(height: 12),
 
                   Row(
                     children: [
-                      Icon(Icons.calendar_month, size: 16, color: cyan),
+                      Icon(Icons.calendar_month_rounded, size: 14, color: cyan),
                       const SizedBox(width: 8),
                       Text(
                         DateFormat('EEE, MMM d, y').format(event.date),
-                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                        style: GoogleFonts.jetBrainsMono(color: Colors.white.withOpacity(0.5), fontSize: 11),
                       ),
                       const Spacer(),
-                      Icon(Icons.access_time, size: 16, color: cyan),
+                      Icon(Icons.access_time_rounded, size: 14, color: cyan),
                       const SizedBox(width: 8),
                       Text(
                         event.time,
-                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                        style: GoogleFonts.jetBrainsMono(color: Colors.white.withOpacity(0.5), fontSize: 11),
                       ),
                     ],
                   ),
@@ -443,12 +445,12 @@ class EventCard extends StatelessWidget {
 
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined, size: 16, color: pink),
+                      Icon(Icons.location_on_rounded, size: 14, color: gold),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           event.location,
-                          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                          style: GoogleFonts.jetBrainsMono(color: Colors.white.withOpacity(0.5), fontSize: 11),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -465,7 +467,7 @@ class EventCard extends StatelessWidget {
                         return CyberBadge(
                           label: tag,
                           type: CyberBadgeType.outline,
-                          color: pink.withOpacity(0.5),
+                          color: cyan.withOpacity(0.5),
                         );
                       }).toList(),
                     ),

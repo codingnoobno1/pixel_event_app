@@ -23,37 +23,38 @@ class CyberCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const cardColor = Color(0xFF15151F);
-    final accentColor = color ?? const Color(0xFFFF2E88);
+    const cyan = Color(0xFF00FFFF);
+    final accentColor = color ?? cyan;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: width,
-        height: height,
-        margin: margin,
-        padding: padding ?? const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: accentColor.withOpacity(0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-            BoxShadow(
-              color: accentColor.withOpacity(0.05),
-              blurRadius: 20,
-              spreadRadius: 2,
-            ),
-          ],
+    return Container(
+      width: width,
+      height: height,
+      margin: margin,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accentColor.withOpacity(0.1),
+          width: 1,
         ),
-        child: child,
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.05),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: padding ?? const EdgeInsets.all(16),
+            child: child,
+          ),
+        ),
       ),
     );
   }

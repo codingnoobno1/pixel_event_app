@@ -34,7 +34,16 @@ class PixelEventsApp extends StatelessWidget {
       title: 'Pixel Events',
       debugShowCheckedModeBanner: false,
       theme: FlexThemeData.dark(
-        scheme: FlexScheme.deepPurple,
+        colors: const FlexSchemeColor(
+          primary: Color(0xFF00FFFF), // Cyan
+          primaryContainer: Color(0xFF003737),
+          secondary: Color(0xFFFF2E88), // Cyber Pink
+          secondaryContainer: Color(0xFF3F0020),
+          tertiary: Color(0xFFFFD700), // Gold
+          tertiaryContainer: Color(0xFF3B3200),
+          appBarColor: Color(0xFF0B0B0F),
+          error: Color(0xFFCF6679),
+        ),
         surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
         blendLevel: 13,
         subThemesData: const FlexSubThemesData(
@@ -43,6 +52,7 @@ class PixelEventsApp extends StatelessWidget {
           useM2StyleDividerInM3: true,
           inputDecoratorBorderType: FlexInputBorderType.outline,
           inputDecoratorRadius: 12.0,
+          inputDecoratorUnfocusedHasBorder: true,
           chipRadius: 20.0,
           cardRadius: 16.0,
           dialogRadius: 20.0,
@@ -55,6 +65,7 @@ class PixelEventsApp extends StatelessWidget {
         visualDensity: FlexColorScheme.comfortablePlatformDensity,
         useMaterial3: true,
         fontFamily: GoogleFonts.outfit().fontFamily,
+        scaffoldBackground: const Color(0xFF0B0B0F),
       ),
       themeMode: ThemeMode.dark,
       initialRoute: '/',

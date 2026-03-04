@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../events/event_list_screen.dart';
-import '../profile/my_passes_screen.dart';
 import '../profile/profile_screen.dart';
 import 'tabs/event_mode_tab.dart';
+import '../../widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,99 +19,149 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = const [
     EventListScreen(),
-    MyPassesScreen(),
-    EventModeTab(), // New 4th tab (Event Mode)
+    EventModeTab(), // 4th tab added here
+    Scaffold(backgroundColor: Colors.transparent, body: Center(child: Text("Passes Area", style: TextStyle(color: Colors.white)))),
     ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    const cyan = Color(0xFF00FFFF);
     const pink = Color(0xFFFF2E88);
     const bg = Color(0xFF0B0B0F);
-    const card = Color(0xFF15151F);
 
     return Scaffold(
       backgroundColor: bg,
+      extendBody: true,
       appBar: AppBar(
-        backgroundColor: bg,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        titleSpacing: 0,
+        centerTitle: false,
         title: Row(
           children: [
-            const SizedBox(width: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                "assets/images/app_icon.jpg",
-                height: 36,
-                width: 36,
-                fit: BoxFit.cover,
+            Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: cyan.withOpacity(0.3), width: 1),
+                boxShadow: [
+                  BoxShadow(color: cyan.withOpacity(0.2), blurRadius: 10),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset("assets/images/app_icon.jpg", height: 32, width: 32),
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              "PIXEL EVENTS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-                fontSize: 18,
+            Text(
+              "PIXEL_VAULT",
+              style: GoogleFonts.jetBrainsMono(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+                fontSize: 16,
+                color: Colors.white,
               ),
-            )
+            ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner_rounded, color: cyan),
+            onPressed: () {},
+          ),
+          const SizedBox(width: 12),
+        ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF0B0B0F), Color(0xFF090912)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Stack(
+        children: [
+          // Background Depth Glows
+          Positioned(
+            top: -100,
+            right: -50,
+            child: _buildGlowCircle(pink.withOpacity(0.05), 300),
+          ),
+          _screens[_selectedIndex],
+        ],
+      ),
+      bottomNavigationBar: _buildFloatingNavBar(),
+    );
+  }
+
+  Widget _buildGlowCircle(Color color, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [BoxShadow(color: color, blurRadius: 100, spreadRadius: 50)],
+      ),
+    );
+  }
+
+  Widget _buildFloatingNavBar() {
+    const cyan = Color(0xFF00FFFF);
+    return Container(
+      height: 70,
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.03),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: cyan.withOpacity(0.1), width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _navItem(0, Icons.grid_view_rounded, "EXPLORE"),
+                _navItem(1, Icons.sensors_rounded, "LIVE"),
+                _navItem(2, Icons.confirmation_number_rounded, "PASSES"),
+                _navItem(3, Icons.person_rounded, "PROFILE"),
+              ],
+            ),
           ),
         ),
-        child: _screens[_selectedIndex],
       ),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(12),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-        decoration: BoxDecoration(
-          color: card,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(color: pink.withOpacity(0.3), blurRadius: 20, spreadRadius: 1)
-          ],
-        ),
-        child: NavigationBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (index) {
-            setState(() => _selectedIndex = index);
-          },
-          indicatorColor: pink.withOpacity(0.2),
-          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.event_outlined),
-              selectedIcon: Icon(Icons.event),
-              label: "Events",
+    ).animate().slideY(begin: 1, end: 0, duration: 800.ms, curve: Curves.easeOutQuint);
+  }
+
+  Widget _navItem(int index, IconData icon, String label) {
+    bool isSelected = _selectedIndex == index;
+    const cyan = Color(0xFF00FFFF);
+    
+    return InkWell(
+      onTap: () => setState(() => _selectedIndex = index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? cyan.withOpacity(0.1) : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
             ),
-            NavigationDestination(
-              icon: Icon(Icons.qr_code_outlined),
-              selectedIcon: Icon(Icons.qr_code),
-              label: "Passes",
+            child: Icon(
+              icon,
+              color: isSelected ? cyan : Colors.white38,
+              size: 24,
             ),
-            NavigationDestination(
-              icon: Icon(Icons.bolt_outlined), // Event Mode Icon
-              selectedIcon: Icon(Icons.bolt),
-              label: "Live Mode",
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.jetBrainsMono(
+              color: isSelected ? cyan : Colors.white38,
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
             ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: "Profile",
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

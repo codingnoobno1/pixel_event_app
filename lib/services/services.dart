@@ -8,3 +8,4 @@ export 'auth_service.dart';
 export 'qr_service.dart';
 export 'scanner_service.dart';
 export 'message_service.dart';
+export 'event_engine_service.dart';

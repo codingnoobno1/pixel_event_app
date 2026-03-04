@@ -6,3 +6,4 @@ export 'attendance_record.dart';
 export 'registration.dart';
 export 'event_message.dart';
 export 'event_mode.dart';
+export 'live_activity.dart';
