@@ -16,7 +16,9 @@ class Event {
   final int participantCount;
   final DateTime? scanWindowStart;
   final DateTime? scanWindowEnd;
-  final String? activeMode;
+  final String? activeMode; // For backward compatibility
+  final String? activeModeType;
+  final DateTime? activeModeStartedAt;
   final List<EventMode>? modes;
 
   const Event({
@@ -34,6 +36,8 @@ class Event {
     this.scanWindowStart,
     this.scanWindowEnd,
     this.activeMode,
+    this.activeModeType,
+    this.activeModeStartedAt,
     this.modes,
   });
 
@@ -74,7 +78,11 @@ class Event {
       scanWindowEnd: json['scanWindowEnd'] != null
           ? DateTime.parse(json['scanWindowEnd'] as String)
           : null,
-      activeMode: json['activeMode'] as String?,
+      activeMode: json['activeMode'] is String ? json['activeMode'] as String : (json['activeMode'] as Map<String, dynamic>?)?['type'] as String?,
+      activeModeType: json['activeMode'] is Map ? (json['activeMode'] as Map<String, dynamic>)['type'] as String? : (json['activeMode'] as String?),
+      activeModeStartedAt: json['activeMode'] is Map && (json['activeMode'] as Map)['startedAt'] != null
+          ? DateTime.parse((json['activeMode'] as Map<String, dynamic>)['startedAt'] as String)
+          : null,
       modes: (json['modes'] as List<dynamic>?)
           ?.map((e) => EventMode.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -97,7 +105,10 @@ class Event {
       'participantCount': participantCount,
       'scanWindowStart': scanWindowStart?.toIso8601String(),
       'scanWindowEnd': scanWindowEnd?.toIso8601String(),
-      'activeMode': activeMode,
+      'activeMode': activeModeType != null ? {
+        'type': activeModeType,
+        'startedAt': activeModeStartedAt?.toIso8601String(),
+      } : activeMode,
       'modes': modes?.map((e) => e.toJson()).toList(),
     };
   }

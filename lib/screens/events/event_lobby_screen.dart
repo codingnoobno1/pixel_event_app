@@ -111,7 +111,7 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
                               style: TextStyle(color: cyan, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1),
                             ),
                             Text(
-                              _currentEvent.activeMode != null ? "MODE: ${_currentEvent.activeMode!.toUpperCase()}" : "JOIN THE FUN!",
+                              _currentEvent.activeModeType != null ? "MODE: ${_currentEvent.activeModeType!.toUpperCase()}" : "JOIN THE FUN!",
                               style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -144,7 +144,7 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
                       "Rapid fire & more", 
                       pink,
                       () => Navigator.pushNamed(context, '/quiz-mode', arguments: _currentEvent),
-                      active: _currentEvent.activeMode == 'quiz'
+                      active: _currentEvent.activeModeType == 'quiz'
                     ),
                     _modeCard(
                       Icons.how_to_vote_outlined, 
@@ -152,7 +152,7 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
                       "Make your voice count", 
                       cyan,
                       () => Navigator.pushNamed(context, '/voting-mode', arguments: _currentEvent),
-                      active: _currentEvent.activeMode == 'voting'
+                      active: _currentEvent.activeModeType == 'voting'
                     ),
                     _modeCard(
                       Icons.explore_outlined, 
@@ -160,7 +160,7 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
                       "Find the hidden codes", 
                       Colors.amber,
                       () => Navigator.pushNamed(context, '/treasure-hunt', arguments: _currentEvent),
-                      active: _currentEvent.activeMode == 'treasure-hunt'
+                      active: _currentEvent.activeModeType == 'treasure-hunt'
                     ),
                     _modeCard(
                       Icons.more_horiz_outlined, 
@@ -176,7 +176,7 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
                 const SizedBox(height: 40),
 
                 // Current Activity Callout
-                if (_currentEvent.activeMode != null)
+                if (_currentEvent.activeModeType != null)
                   CyberCard(
                     color: pink.withOpacity(0.2),
                     child: Row(
@@ -185,7 +185,7 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            "The ${_currentEvent.activeMode} mode is currently live! Join now for participation points.",
+                            "The ${_currentEvent.activeModeType} mode is currently live! Join now for participation points.",
                             style: const TextStyle(color: Colors.white70, fontSize: 13),
                           ),
                         ),
