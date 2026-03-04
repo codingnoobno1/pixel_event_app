@@ -1,6 +1,6 @@
-# Live Event Integration: Flutter & Next.js
+# Live Event Integration: Mini-Events & Fun Activities
 
-This document outlines how "Live Modes" (Quiz, Voting, Treasure Hunt) are managed in the Next.js backend and consumed by the Flutter mobile app.
+This document outlines how "Live Modes" (Quiz, Voting, Treasure Hunt) function as **mini-events** or **fun activities** triggered during a major event. These are managed in Next.js and consumed by the Flutter app.
 
 ## 1. Backend Data Structure (Next.js)
 

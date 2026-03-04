@@ -107,11 +107,11 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              "EVENT STATUS",
+                              "MINI-EVENT STATUS",
                               style: TextStyle(color: cyan, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1),
                             ),
                             Text(
-                              _currentEvent.activeMode != null ? "ACTIVE: ${_currentEvent.activeMode!.toUpperCase()}" : "LIVE IN PROGRESS",
+                              _currentEvent.activeMode != null ? "MODE: ${_currentEvent.activeMode!.toUpperCase()}" : "JOIN THE FUN!",
                               style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -125,7 +125,7 @@ class _EventLobbyScreenState extends ConsumerState<EventLobbyScreen> {
                 const SizedBox(height: 40),
 
                 const Text(
-                  "SELECT EVENT MODE",
+                  "CHOOSE A FUN ACTIVITY",
                   style: TextStyle(color: Colors.white60, fontWeight: FontWeight.bold, letterSpacing: 2, fontSize: 12),
                 ),
                 const SizedBox(height: 20),
