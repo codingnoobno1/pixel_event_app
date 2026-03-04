@@ -9,7 +9,7 @@ import '../../providers/repository_providers.dart';
 import '../../widgets/widgets.dart';
 import '../registration/registration_screen.dart';
 import '../registration/event_pass_screen.dart';
-import 'event_lobby_screen.dart';
+import 'live_event_lobby_screen.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
   final Event event;
@@ -195,11 +195,18 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                   if (_isRegistered) ...[
                     Expanded(
                       child: CyberButton(
-                        onPressed: () async {
-                          final pass = await _fetchPass();
-                          if (pass != null && mounted) {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => EventLobbyScreen(event: widget.event, pass: pass)));
-                          }
+                        onPressed: () {
+                          final user = ref.read(authServiceProvider).currentUser;
+                          final participantId = user?.enrollmentNumber ?? user?.email ?? 'guest';
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LiveEventLobbyScreen(
+                                event: widget.event,
+                                participantId: participantId,
+                              ),
+                            ),
+                          );
                         },
                         text: "ENTER_LOBBY",
                         icon: Icons.hub_rounded,

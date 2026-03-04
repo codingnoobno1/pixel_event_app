@@ -68,15 +68,15 @@ class _HuntQrScannerState extends ConsumerState<HuntQrScanner> {
         eventId: widget.event.id,
         checkpointId: checkpointId,
         participantId: widget.participantId,
-        teamId: widget.teamId,
+        // teamId removed — new engine tracks by participantId only
       );
 
-      if (result['success'] == true) {
+      if (result.success) {
         if (mounted) {
-          Navigator.pop(context, result['checkpoint']);
+          Navigator.pop(context, result.challenge);
         }
       } else {
-        _showError(result['error'] ?? 'Scan failed');
+        _showError(result.error ?? 'Scan failed');
       }
     } catch (e) {
       _showError(e.toString());

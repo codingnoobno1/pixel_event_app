@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/live_activity.dart';
 import '../../services/event_engine_service.dart';
-import '../../services/api_client.dart';
+import '../../providers/providers.dart';
 import '../../models/models.dart';
 import 'modes/quiz_mode_screen.dart';
 import 'modes/voting_mode_screen.dart';
@@ -45,9 +46,9 @@ class _TypeMeta {
 /// When an activity goes live, shows an ANIMATE-IN banner and optionally
 /// navigates to the correct activity screen.
 /// ─────────────────────────────────────────────────────────────────────────────
-class LiveEventLobbyScreen extends StatefulWidget {
+class LiveEventLobbyScreen extends ConsumerStatefulWidget {
   final Event event;
-  final String participantId; // enrollment number or email
+  final String participantId;
 
   const LiveEventLobbyScreen({
     super.key,
@@ -56,10 +57,10 @@ class LiveEventLobbyScreen extends StatefulWidget {
   });
 
   @override
-  State<LiveEventLobbyScreen> createState() => _LiveEventLobbyScreenState();
+  ConsumerState<LiveEventLobbyScreen> createState() => _LiveEventLobbyScreenState();
 }
 
-class _LiveEventLobbyScreenState extends State<LiveEventLobbyScreen>
+class _LiveEventLobbyScreenState extends ConsumerState<LiveEventLobbyScreen>
     with TickerProviderStateMixin {
   late final EventEngineService _engine;
   late final Timer _pollTimer;
@@ -75,7 +76,8 @@ class _LiveEventLobbyScreenState extends State<LiveEventLobbyScreen>
   @override
   void initState() {
     super.initState();
-    _engine = EventEngineService(ApiClient());
+    // Use the Riverpod-managed service (properly configured ApiClient)
+    _engine = ref.read(eventEngineServiceProvider);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
