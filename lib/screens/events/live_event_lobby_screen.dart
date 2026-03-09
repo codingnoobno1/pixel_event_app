@@ -232,18 +232,19 @@ class _LiveEventLobbyScreenState extends ConsumerState<LiveEventLobbyScreen>
           : Column(
               children: [
                 // ── Live Activity Banner ──────────────────────────────────
-                AnimatedCrossFade(
+                // Safe conditional — AnimatedCrossFade builds both children
+                // simultaneously, causing live!/meta! null crash when no activity.
+                AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
-                  firstChild: _LiveBanner(
-                    activity: live!,
-                    meta: meta!,
-                    onJoin: () => _navigateToActivity(live),
-                    pulseController: _pulseController,
-                  ),
-                  secondChild: _WaitingBanner(),
-                  crossFadeState: live != null
-                      ? CrossFadeState.showFirst
-                      : CrossFadeState.showSecond,
+                  child: live != null
+                      ? _LiveBanner(
+                          key: ValueKey(live.id),
+                          activity: live,
+                          meta: meta ?? _typeMeta['announcement']!,
+                          onJoin: () => _navigateToActivity(live),
+                          pulseController: _pulseController,
+                        )
+                      : _WaitingBanner(key: const ValueKey('waiting')),
                 ),
 
                 // ── Error ────────────────────────────────────────────────
@@ -338,6 +339,7 @@ class _LiveBanner extends StatelessWidget {
   final AnimationController pulseController;
 
   const _LiveBanner({
+    super.key,
     required this.activity,
     required this.meta,
     required this.onJoin,
@@ -415,6 +417,8 @@ class _LiveBanner extends StatelessWidget {
 }
 
 class _WaitingBanner extends StatelessWidget {
+  const _WaitingBanner({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -501,7 +505,7 @@ class _ActivityCard extends StatelessWidget {
                 ),
               )
             else
-              Icon(Icons.lock_outline, color: Colors.white15, size: 16),
+              Icon(Icons.lock_outline, color: Colors.white12, size: 16),
           ],
         ),
       ),

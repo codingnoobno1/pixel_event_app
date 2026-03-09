@@ -20,6 +20,41 @@ class EventEngineService {
     return EventStatusResponse.fromJson(response.data);
   }
 
+  // ── Quiz Submission ───────────────────────────────────────────────────────
+  /// POST /api/flutter/events/quiz/submit
+  /// Grade and store a quiz attempt server-side.
+  /// [answers] = list of {questionId, selectedOption}
+  Future<Map<String, dynamic>> submitQuiz({
+    required String activityId,
+    required String participantId,
+    required List<Map<String, String>> answers,
+    int? timeTakenSeconds,
+  }) async {
+    final response = await _apiClient.post(
+      '/api/flutter/events/quiz/submit',
+      data: {
+        'activityId': activityId,
+        'participantId': participantId,
+        'answers': answers,
+        if (timeTakenSeconds != null) 'timeTakenSeconds': timeTakenSeconds,
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// GET /api/flutter/events/quiz/submit?activityId=[id]&participantId=[id]
+  /// Check if participant already submitted (restore result on re-open).
+  Future<Map<String, dynamic>> getQuizSubmission({
+    required String activityId,
+    required String participantId,
+  }) async {
+    final response = await _apiClient.get(
+      '/api/flutter/events/quiz/submit',
+      queryParameters: {'activityId': activityId, 'participantId': participantId},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
   // ── Timeline (one-time cache) ────────────────────────────────────────────
   /// GET /api/flutter/events/timeline?eventId=[id]
   /// Fetch once on event entry. Cache quiz packs locally.

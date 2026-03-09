@@ -189,7 +189,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
         ),
         child: (_isCheckingStatus || _isLoadingPass)
-            ? const SizedBox(height: 56, child: Center(child: CyberLoading(message: "VERIFYING_ACCESS")))
+            ? const SizedBox(height: 56, child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00FFFF))))
             : Row(
                 children: [
                   if (_isRegistered) ...[

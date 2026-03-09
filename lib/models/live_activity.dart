@@ -57,6 +57,7 @@ class QuizQuestion {
   final List<String> options;
   final int points;
   final String? imageUrl;
+  final String? correctAnswer; // included in status payload for local grading
 
   const QuizQuestion({
     required this.id,
@@ -64,6 +65,7 @@ class QuizQuestion {
     required this.options,
     required this.points,
     this.imageUrl,
+    this.correctAnswer,
   });
 
   factory QuizQuestion.fromJson(Map<String, dynamic> json) => QuizQuestion(
@@ -72,6 +74,7 @@ class QuizQuestion {
         options: List<String>.from(json['options'] ?? []),
         points: json['points'] ?? 10,
         imageUrl: json['imageUrl'],
+        correctAnswer: json['correctAnswer'],
       );
 }
 
