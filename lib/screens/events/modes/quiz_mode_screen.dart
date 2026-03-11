@@ -40,8 +40,104 @@ class QuizModeScreen extends ConsumerStatefulWidget {
 }
 
 class _QuizModeScreenState extends ConsumerState<QuizModeScreen> {
+  bool _loading = false;
+  List<Map<String, dynamic>>? _existingResults;
+  int? _existingScore;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.activity?.hasSubmitted == true) {
+      _fetchExistingResults();
+    }
+  }
+
+  Future<void> _fetchExistingResults() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final engine = ref.read(eventEngineServiceProvider);
+      final res = await engine.getQuizSubmission(
+        activityId: widget.activity!.id,
+        participantId: widget.participantId ?? '',
+      );
+      if (res['success'] == true) {
+        final data = res['data'] ?? res; // Handle both wrapped and unwrapped
+        setState(() {
+          _existingScore = data['score'];
+          final List<dynamic> answers = data['answers'] ?? [];
+          _existingResults = answers.map((a) => {
+            'q': a['questionText'] ?? 'Unknown Question',
+            'picked': a['selectedOption'] ?? '—',
+            'correct': a['correctAnswer'] ?? '',
+            'isCorrect': a['isCorrect'] ?? false,
+          }).toList().cast<Map<String, dynamic>>();
+        });
+      } else {
+        setState(() => _error = res['error'] ?? 'Failed to fetch results');
+      }
+    } catch (e) {
+      setState(() => _error = 'Connection error: $e');
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        backgroundColor: _bg,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: _cyan),
+              const SizedBox(height: 16),
+              Text('RETRIEVING YOUR RESULTS...', 
+                style: GoogleFonts.jetBrainsMono(color: _cyan, fontSize: 10, letterSpacing: 2)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_existingResults != null) {
+      return _ResultScreen(
+        score: _existingScore ?? 0,
+        results: _existingResults!,
+        activityTitle: widget.activity?.title ?? 'Quiz Results',
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: _bg,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: _pink, size: 48),
+                const SizedBox(height: 16),
+                Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(backgroundColor: _pink),
+                  child: const Text('BACK'),
+                )
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final quiz = widget.activity?.quiz;
 
     if (quiz == null) {
