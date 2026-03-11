@@ -10,12 +10,15 @@ class EventEngineService {
   EventEngineService(this._apiClient);
 
   // ── Status poll ──────────────────────────────────────────────────────────
-  /// GET /api/flutter/events/status?eventId=[id]
+  /// GET /api/flutter/events/status?eventId=[id]&participantId=[id]
   /// Call every 5-10s. Returns the currently active [LiveActivity] or null.
-  Future<EventStatusResponse> getEventStatus(String eventId) async {
+  Future<EventStatusResponse> getEventStatus(String eventId, String participantId) async {
     final response = await _apiClient.get(
       '/api/flutter/events/status',
-      queryParameters: {'eventId': eventId},
+      queryParameters: {
+        'eventId': eventId,
+        'participantId': participantId,
+      },
     );
     return EventStatusResponse.fromJson(response.data);
   }

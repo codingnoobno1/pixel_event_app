@@ -99,7 +99,7 @@ class _LiveEventLobbyScreenState extends ConsumerState<LiveEventLobbyScreen>
 
   Future<void> _poll() async {
     try {
-      final status = await _engine.getEventStatus(widget.event.id);
+      final status = await _engine.getEventStatus(widget.event.id, widget.participantId);
       if (!mounted) return;
 
       final newActivity = status.activeActivity;
@@ -382,19 +382,30 @@ class _LiveBanner extends StatelessWidget {
                       children: [
                         Container(
                           width: 6, height: 6,
-                          decoration: BoxDecoration(color: _green, shape: BoxShape.circle),
+                          decoration: BoxDecoration(
+                              color: activity.hasSubmitted ? _yellow : _green,
+                              shape: BoxShape.circle),
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'LIVE NOW · ${meta.label}',
-                          style: TextStyle(color: meta.color, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
+                          activity.hasSubmitted
+                              ? 'ATTEMPTED · ${meta.label}'
+                              : 'LIVE NOW · ${meta.label}',
+                          style: TextStyle(
+                              color: meta.color,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 10,
+                              letterSpacing: 1.5),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       activity.title,
-                      style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800),
                     ),
                   ],
                 ),
@@ -402,11 +413,20 @@ class _LiveBanner extends StatelessWidget {
               TextButton(
                 onPressed: onJoin,
                 style: TextButton.styleFrom(
-                  backgroundColor: meta.color,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  backgroundColor:
+                      activity.hasSubmitted ? _green : meta.color,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('JOIN', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 13)),
+                child: Text(
+                  activity.hasSubmitted ? 'RESULTS' : 'JOIN',
+                  style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13),
+                ),
               ),
             ],
           ),
@@ -500,10 +520,12 @@ class _ActivityCard extends StatelessWidget {
                   border: Border.all(color: color.withOpacity(0.4)),
                 ),
                 child: Text(
-                  'LIVE',
+                  isLive ? 'LIVE' : 'LOCKED',
                   style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1),
                 ),
               )
+            else if (isLive && label == 'Quiz' && onTap == null) // This logic needs to be better, use hasSubmitted
+               Container() // Fallback
             else
               Icon(Icons.lock_outline, color: Colors.white12, size: 16),
           ],

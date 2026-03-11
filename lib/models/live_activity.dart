@@ -7,6 +7,7 @@ class LiveActivity {
   final String title;
   final String? description;
   final String status;
+  final bool hasSubmitted;
   final DateTime? activatedAt;
 
   // Type-specific data
@@ -37,6 +38,7 @@ class LiveActivity {
       title: json['title'] ?? '',
       description: json['description'],
       status: json['status'] ?? 'inactive',
+      hasSubmitted: json['hasSubmitted'] ?? false,
       activatedAt: json['activatedAt'] != null
           ? DateTime.tryParse(json['activatedAt'])
           : null,
