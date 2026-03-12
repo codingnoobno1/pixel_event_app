@@ -443,7 +443,7 @@ class _CustomLiveQuizState extends ConsumerState<_CustomLiveQuiz> {
 
   Future<void> _poll() async {
     try {
-      final status = await widget.engine.getEventStatus(widget.event.id);
+      final status = await widget.engine.getEventStatus(widget.event.id, widget.participantId);
       final updated = status.activeActivity;
       if (updated == null || !mounted) return;
       final newQ = updated.quiz?.currentQuestion ?? 0;

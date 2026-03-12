@@ -23,6 +23,7 @@ class LiveActivity {
     required this.title,
     this.description,
     required this.status,
+    this.hasSubmitted = false,
     this.activatedAt,
     this.quiz,
     this.voting,
